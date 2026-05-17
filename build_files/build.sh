@@ -13,9 +13,9 @@ set -ouex pipefail
 dnf5 install -y tmux 
 
 # microwave gave me these commands
-dnf5 -y copr enable horizonproject/horizon
-dnf5 install -y horizon-backgrounds
-dnf5 -y copr disable horizonproject/horizon
+#dnf5 -y copr enable horizonproject/horizon
+#dnf5 install -y horizon-backgrounds
+#dnf5 -y copr disable horizonproject/horizon
 
 dnf5 install -y f37-backgrounds-kde f38-backgrounds-kde f39-backgrounds-kde f40-backgrounds-kde f42-backgrounds-kde f43-backgrounds-kde
 
