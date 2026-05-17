@@ -72,6 +72,7 @@ rm -rf /tmp/ball
 
 # end of more plasmoid gaming
 
-# turn off the NTFS/exFAT partition mount nag
-sudo systemctl --global disable ntfs-nag.service
-sudo systemctl stop ntfs-nag.service
+# turn off the NTFS/exFAT partition mount nag stolen from quinces repo
+systemctl --global disable ntfs-nag.service
+rm /usr/lib/systemd/user/ntfs-nag.service
+rm /usr/libexec/ntfs_exfat_monitor_script
