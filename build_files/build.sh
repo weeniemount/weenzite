@@ -57,7 +57,7 @@ sed -i \
   -e 's|DOCUMENTATION_URL=".*"|DOCUMENTATION_URL="https://github.com/weeniemount/weenzite/wiki"|' \
   -e 's|SUPPORT_URL=".*"|SUPPORT_URL="https://github.com/weeniemount/weenzite/discussions"|' \
   -e 's|BUG_REPORT_URL=".*"|BUG_REPORT_URL="https://github.com/weeniemount/weenzite/issues/"|' \
-  /etc/os-release
+  /usr/lib/os-release
 
 # end of rebrand gaming
 
