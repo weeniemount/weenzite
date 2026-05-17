@@ -22,3 +22,17 @@ dnf5 install -y tmux
 #### Example for enabling a System Unit File
 
 systemctl enable podman.socket
+
+
+# download google balls
+
+curl -L -o /tmp/gtk-app-linux-x64.tar.gz \
+  https://github.com/weeniemount/googleballs-app/releases/latest/download/gtk-app-linux-x64.tar.gz
+
+tar -xzf /tmp/gtk-app-linux-x64.tar.gz -C /usr/weenzite/balls --no-same-owner
+
+rm -f /usr/weenzite/balls/README.txt
+
+rm -f /tmp/gtk-app-linux-x64.tar.gz
+
+# end of download google balls
