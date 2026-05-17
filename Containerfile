@@ -9,7 +9,7 @@ FROM ghcr.io/ublue-os/bazzite-nvidia-open:stable
 
 # we need to copy the files befoer anything else, othewise trying to refernce them in the .sh scripts blows it up :pensive:
 # copy my funny stuff over to the root partition
-#COPY system_files/overrides/ /
+COPY system_files/overrides/ /
 COPY system_files/custom/ /
 
 ## Other possible base images include:

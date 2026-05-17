@@ -75,3 +75,7 @@ mv /tmp/ball/package/* /usr/share/plasma/plasmoids/org.kde.plasma.bouncyball/
 rm -rf /tmp/ball
 
 # end of more plasmoid gaming
+
+# turn off the NTFS/exFAT partition mount nag
+sudo systemctl --global disable ntfs-nag.service
+sudo systemctl stop ntfs-nag.service
