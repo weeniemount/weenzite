@@ -5,6 +5,13 @@ COPY build_files /
 # Base Image
 FROM ghcr.io/ublue-os/bazzite-nvidia-open:stable
 
+# yes... i copied this from weenOS. so what?
+
+# we need to copy the files befoer anything else, othewise trying to refernce them in the .sh scripts blows it up :pensive:
+# copy my funny stuff over to the root partition
+#COPY system_files/overrides/ /
+COPY system_files/custom/ /
+
 ## Other possible base images include:
 # FROM ghcr.io/ublue-os/bazzite:latest
 # FROM ghcr.io/ublue-os/bluefin-nvidia:stable
