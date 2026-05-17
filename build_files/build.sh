@@ -53,3 +53,18 @@ sed -i \
   /etc/os-release
 
 # end of rebrand gaming
+
+
+# more plasmoid gaming
+
+# maxwell!
+
+git clone https://github.com/wilversings/maxwell /usr/share/plasma/plasmoids/maxwell/
+
+# new bouncy ball widget for kde plasma 6
+git clone https://invent.kde.org/filipf/bouncy-ball /tmp/ball
+mkdir -p /usr/share/plasma/plasmoids/org.kde.plasma.bouncyball
+mv /tmp/ball/package/* /usr/share/plasma/plasmoids/org.kde.plasma.bouncyball/
+rm -rf /tmp/ball
+
+# end of more plasmoid gaming
