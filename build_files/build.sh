@@ -2,40 +2,14 @@
 
 set -ouex pipefail
 
-### Install packages
-
-# Packages can be installed from any enabled yum repo on the image.
-# RPMfusion repos are available by default in ublue main images
-# List of rpmfusion packages can be found here:
-# https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/43/x86_64/repoview/index.html&protocol=https&redirect=1
-
-# this installs a package from fedora repos
-dnf5 install -y tmux 
-
-
+dnf5 install -y tmux qemu libvirt guestfs-tools
 dnf5 install -y f37-backgrounds-kde f38-backgrounds-kde f39-backgrounds-kde f40-backgrounds-kde f42-backgrounds-kde f43-backgrounds-kde
 
-# Use a COPR Example:
-#
-# dnf5 -y copr enable ublue-os/staging
-# dnf5 -y install package
-# Disable COPRs so they don't end up enabled on the final image:
-# dnf5 -y copr disable ublue-os/staging
-
-#### Example for enabling a System Unit File
-
-systemctl enable podman.socket
-
-
 # download google balls
-
 curl -L -o /tmp/gtk-app-linux-x64.tar.gz \
   https://github.com/weeniemount/googleballs-app/releases/latest/download/gtk-app-linux-x64.tar.gz
-
 tar -xzf /tmp/gtk-app-linux-x64.tar.gz -C /usr/weenzite/balls --no-same-owner
-
 rm -f /usr/weenzite/balls/README.txt
-
 rm -f /tmp/gtk-app-linux-x64.tar.gz
 
 # end of download google balls
@@ -57,7 +31,6 @@ sed -i \
 
 # end of rebrand gaming
 
-
 # more plasmoid gaming
 
 # maxwell!
@@ -76,3 +49,34 @@ rm -rf /tmp/ball
 systemctl --global disable ntfs-nag.service
 rm /usr/lib/systemd/user/ntfs-nag.service
 rm /usr/libexec/ntfs_exfat_monitor_script
+
+systemctl enable libvirtd.service
+systemctl enable podman.socket
+
+
+if [ -f /etc/passwd ]; then
+    out=$(grep -v "root" /etc/passwd) || true
+    if [ -n "$out" ]; then
+        echo
+        echo Moving the following passwd users to /usr/lib/passwd
+        echo "$out"
+        echo "$out" >> /usr/lib/passwd
+        echo "root:x:0:0:root:/root:/bin/bash" > /etc/passwd
+    fi
+fi
+if [ -f /etc/group ]; then
+    out=$(grep -v "root\|wheel" /etc/group) || true
+    if [ -n "$out" ]; then
+        echo
+        echo Moving the following group entries to /usr/lib/group
+        echo "$out"
+        echo "$out" >> /usr/lib/group
+        echo "root:x:0:" > /etc/group
+        echo "wheel:x:10:" >> /etc/group
+    fi
+fi
+
+# and then forcefully rebuild initrd!!!!... maybe this one will work
+QUALIFIED_KERNEL="$(dnf5 repoquery --installed --queryformat='%{evr}.%{arch}' "kernel")"
+/usr/bin/dracut --no-hostonly --kver "$QUALIFIED_KERNEL" --reproducible --zstd -v --add ostree --add fido2 -f "/usr/lib/modules/$QUALIFIED_KERNEL/initramfs.img"
+chmod 0600 /usr/lib/modules/"$QUALIFIED_KERNEL"/initramfs.img
