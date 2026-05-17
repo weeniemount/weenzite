@@ -2,8 +2,10 @@
 
 set -ouex pipefail
 
-dnf5 install -y tmux qemu libvirt guestfs-tools
+dnf5 install -y tmux qemu libvirt guestfs-tools btop fira-code-fonts jetbrains-mono-fonts cowsay plasma-oxygen
 dnf5 install -y f37-backgrounds-kde f38-backgrounds-kde f39-backgrounds-kde f40-backgrounds-kde f42-backgrounds-kde f43-backgrounds-kde
+
+# download ween stuff
 
 # download google balls
 curl -L -o /tmp/gtk-app-linux-x64.tar.gz \
@@ -12,7 +14,13 @@ tar -xzf /tmp/gtk-app-linux-x64.tar.gz -C /usr/weenzite/balls --no-same-owner
 rm -f /usr/weenzite/balls/README.txt
 rm -f /tmp/gtk-app-linux-x64.tar.gz
 
-# end of download google balls
+# download the news
+
+curl -L -o /usr/weenzite/news/thenews \
+  https://github.com/weeniemount/thenews-linux/releases/latest/download/thenews
+chmod +x /usr/weenzite/news/thenews
+
+# end of download ween stuff
 
 # rebrand gaming
 sed -i \
