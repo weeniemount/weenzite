@@ -36,3 +36,20 @@ rm -f /usr/weenzite/balls/README.txt
 rm -f /tmp/gtk-app-linux-x64.tar.gz
 
 # end of download google balls
+
+# rebrand gaming
+sed -i \
+  -e '/image-ref/!s/bazzite-nvidia-open/weenzite/g' \
+  -e '/image-ref/!s/ublue-os/weeniemount/g' \
+  /usr/share/ublue-os/image-info.json
+
+sed -i \
+  -e '/^CPE_NAME/!s/Bazzite/Weenzite/g' \
+  -e '/^CPE_NAME\|^BOOTLOADER_NAME\|^LOGO\|^IMAGE_ID/!s/bazzite/weenzite/g' \
+  -e 's|HOME_URL=".*"|HOME_URL="https://github.com/weeniemount/weenzite"|' \
+  -e 's|DOCUMENTATION_URL=".*"|DOCUMENTATION_URL="https://github.com/weeniemount/weenzite/wiki"|' \
+  -e 's|SUPPORT_URL=".*"|SUPPORT_URL="https://github.com/weeniemount/weenzite/discussions"|' \
+  -e 's|BUG_REPORT_URL=".*"|BUG_REPORT_URL="https://github.com/weeniemount/weenzite/issues/"|' \
+  /etc/os-release
+
+# end of rebrand gaming
