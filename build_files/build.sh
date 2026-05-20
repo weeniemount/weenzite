@@ -34,6 +34,37 @@ dnf5 install -y \
 dnf5 -y copr enable horizonproject/horizon
 dnf5 install -y horizon-backgrounds
 dnf5 -y copr disable horizonproject/horizon
+# fix old wallpaper metadata so they show up in system settings
+find /usr/share/plasma/wallpapers -name "metadata.desktop" | while read desktop; do
+    dir=$(dirname "$desktop")
+    json="$dir/metadata.json"
+
+    [ -f "$json" ] && continue
+
+    name=$(grep "^Name=" "$desktop" | cut -d= -f2)
+    email=$(grep "^X-KDE-PluginInfo-Email=" "$desktop" | cut -d= -f2)
+    author=$(grep "^X-KDE-PluginInfo-Author=" "$desktop" | cut -d= -f2)
+    id=$(grep "^X-KDE-PluginInfo-Name=" "$desktop" | cut -d= -f2)
+    license=$(grep "^X-KDE-PluginInfo-License=" "$desktop" | cut -d= -f2)
+
+    cat > "$json" <<EOF
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "$email",
+                "Name": "$author"
+            }
+        ],
+        "Id": "$id",
+        "Name": "$name",
+        "License": "$license"
+    }
+}
+EOF
+
+    echo "created: $json"
+done
 
 # download ween stuff
 
