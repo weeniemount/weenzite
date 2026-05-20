@@ -4,6 +4,11 @@ set -ouex pipefail
 
 dnf5 install -y tmux qemu libvirt guestfs-tools btop fira-code-fonts jetbrains-mono-fonts cowsay plasma-oxygen
 dnf5 install -y \
+  f21-backgrounds-kde \
+  f22-backgrounds-kde \
+  f23-backgrounds-kde \
+  f24-backgrounds-kde \
+  f25-backgrounds-kde \
   f26-backgrounds-kde \
   f27-backgrounds-kde \
   f28-backgrounds-kde \
@@ -22,6 +27,7 @@ dnf5 install -y \
   f41-backgrounds-kde \
   f42-backgrounds-kde \
   f43-backgrounds-kde \
+  fedora-eln-backgrounds \
   heisenbug-backgrounds-kde \
   goddard-backgrounds-kde \
   laughlin-backgrounds-kde \
