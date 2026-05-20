@@ -47,7 +47,7 @@ dnf5 -y copr enable horizonproject/horizon
 dnf5 install -y horizon-backgrounds
 dnf5 -y copr disable horizonproject/horizon
 # fix old wallpaper metadata so they show up in system settings
-find /usr/share/plasma/wallpapers -name "metadata.desktop" | while read desktop; do
+find /usr/share/wallpapers -name "metadata.desktop" | while read desktop; do
     dir=$(dirname "$desktop")
     json="$dir/metadata.json"
 
