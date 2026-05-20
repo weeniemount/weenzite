@@ -4,10 +4,6 @@ set -ouex pipefail
 
 dnf5 install -y tmux qemu libvirt guestfs-tools btop fira-code-fonts jetbrains-mono-fonts cowsay plasma-oxygen
 dnf5 install -y f37-backgrounds-kde f38-backgrounds-kde f39-backgrounds-kde f40-backgrounds-kde f42-backgrounds-kde f43-backgrounds-kde
-# microwave gave me these commands
-dnf5 -y copr enable horizonproject/horizon
-dnf5 install -y horizon-backgrounds
-dnf5 -y copr disable horizonproject/horizon
 
 # download ween stuff
 
