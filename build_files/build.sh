@@ -28,14 +28,14 @@ dnf5 install -y \
   f42-backgrounds-kde \
   f43-backgrounds-kde \
   fedora-eln-backgrounds \
-  heisenbug-backgrounds-kde \
-  goddard-backgrounds-kde \
-  laughlin-backgrounds-kde \
-  lovelock-backgrounds-kde \
-  verne-backgrounds-kde \
-  beefy-miracle-backgrounds-kde \
-  spherical-cow-backgrounds-kde \
-  schroedinger-cat-backgrounds-kde
+  heisenbug-backgrounds \
+  goddard-backgrounds \
+  laughlin-backgrounds \
+  lovelock-backgrounds \
+  verne-backgrounds \
+  beefy-miracle-backgrounds \
+  spherical-cow-backgrounds \
+  schroedinger-cat-backgrounds
 # microwave gave me these commands
 dnf5 -y copr enable horizonproject/horizon
 dnf5 install -y horizon-backgrounds
