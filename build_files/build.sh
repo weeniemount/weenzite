@@ -3,7 +3,7 @@
 set -ouex pipefail
 
 dnf5 install -y tmux qemu libvirt guestfs-tools btop fira-code-fonts jetbrains-mono-fonts cowsay plasma-oxygen
-dnf5 install -y \
+dnf5 install --skip-unavailable -y \
   f21-backgrounds-kde \
   f22-backgrounds-kde \
   f23-backgrounds-kde \
@@ -28,14 +28,20 @@ dnf5 install -y \
   f42-backgrounds-kde \
   f43-backgrounds-kde \
   fedora-eln-backgrounds \
-  heisenbug-backgrounds \
-  goddard-backgrounds \
-  laughlin-backgrounds \
-  lovelock-backgrounds \
-  verne-backgrounds \
-  beefy-miracle-backgrounds \
-  spherical-cow-backgrounds \
-  schroedinger-cat-backgrounds
+  fedorainfinity-backgrounds \
+  gears-backgrounds \
+  neon-backgrounds \
+  solar-backgrounds \
+  desktop-backgrounds-basic \
+  constantine-backgrounds \
+  leonidas-backgrounds \
+  goddard-backgrounds-kde \
+  laughlin-backgrounds-kde \
+  lovelock-backgrounds-kde \
+  verne-backgrounds-kde \
+  beefy-miracle-backgrounds-kde \
+  spherical-cow-backgrounds-kde \
+  schroedinger-cat-backgrounds-kde
 # microwave gave me these commands
 dnf5 -y copr enable horizonproject/horizon
 dnf5 install -y horizon-backgrounds
