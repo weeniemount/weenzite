@@ -22,6 +22,9 @@ echo "==> Building Go D-Bus bridges"
 
 GOPATH_TMP="$(mktemp -d)"
 export GOPATH="$GOPATH_TMP"
+export GOCACHE="$GOPATH_TMP/cache"
+export HOME="$GOPATH_TMP/home"
+mkdir -p "$GOCACHE" "$HOME"
 
 pushd "$SCRIPT_DIR/dbus-bridges"
 go build -o "$BRIDGES_DIR/" ./cmd/session-bridge
