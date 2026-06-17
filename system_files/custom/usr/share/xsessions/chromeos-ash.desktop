@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Ash (ChromeOS)
+Comment=ChromeOS Ash shell running on Linux
+Exec=/usr/bin/chromeos-ash-session
+TryExec=/usr/bin/chromeos-ash-session
+Type=XSession
