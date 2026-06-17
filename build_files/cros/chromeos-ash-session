@@ -157,6 +157,17 @@ sommelier_loop() {
         rm -f "$XDG_RUNTIME_DIR/wayland-1" "$XDG_RUNTIME_DIR/wayland-1.lock" \
               /tmp/.X10-lock /tmp/.X11-unix/X10 2>/dev/null || true
 
+        (
+            for i in $(seq 1 10); do
+                DISPLAY=:10 xrdb -merge /dev/null 2>/dev/null && {
+                    printf 'XTerm*background: black\nXTerm*foreground: white\n*background: black\n*foreground: white\n' \
+                        | DISPLAY=:10 xrdb -merge 2>/dev/null || true
+                    break
+                }
+                sleep 0.5
+            done
+        ) &
+
         SOMMELIER_DISPLAY=wayland-0 \
         WAYLAND_DISPLAY=wayland-0 \
         XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
@@ -179,6 +190,7 @@ SOMMELIER_LOOP_PID=$!
 
 while true; do
     rm -f "$XDG_RUNTIME_DIR/wayland-0" "$XDG_RUNTIME_DIR/wayland-0.lock" \
+          "$XDG_RUNTIME_DIR/wayland-1" "$XDG_RUNTIME_DIR/wayland-1.lock" \
           /tmp/.X10-lock /tmp/.X11-unix/X10 2>/dev/null || true
 
     /usr/bin/chromeos-ash \
@@ -215,5 +227,7 @@ while true; do
 
     while pgrep -x chrome >/dev/null 2>&1; do sleep 2; done
     sleep 1
-    break
+
+    sommelier_loop &
+    SOMMELIER_LOOP_PID=$!
 done

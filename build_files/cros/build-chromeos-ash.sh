@@ -16,7 +16,7 @@ dnf5 install --skip-unavailable -y \
     meson ninja-build python3-jinja2 wayland-devel \
     libxkbcommon-devel libdrm-devel pixman-devel \
     libxcb-devel wayland-protocols-devel \
-    patchelf
+    patchelf xorg-x11-server-utils
 
 echo "==> Building Go D-Bus bridges"
 
