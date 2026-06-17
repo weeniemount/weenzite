@@ -376,15 +376,18 @@ while IFS=: read -r csp_offset _; do
     echo "Patched CSP at $csp_offset"
 done < <(grep -Fboa "'wasm-unsafe-eval'" "$CHROME")
 
-display_init_va=$(nm -C "$CHROME" \
-    | awk '/ display::DisplayConfigurator::Init\(std::__Cr::unique_ptr<display::NativeDisplayDelegate/ { print "0x"$1; exit }')
+echo "==> Running nm on Chrome (this takes a moment)"
+nm -C "$CHROME" > /tmp/chrome_nm.txt
+
+display_init_va=$(awk '/ display::DisplayConfigurator::Init\(std::__Cr::unique_ptr<display::NativeDisplayDelegate/ { print "0x"$1; exit }' /tmp/chrome_nm.txt)
 [ -n "$display_init_va" ] || { echo "ERROR: DisplayConfigurator::Init not found" >&2; exit 1; }
 
-display_text_delta=$(objdump -h "$CHROME" | awk '$2 == ".text" { printf "%d\n", strtonum("0x"$6) - strtonum("0x"$4); exit }')
+objdump -h "$CHROME" > /tmp/chrome_objdump.txt
+display_text_delta=$(awk '$2 == ".text" { printf "%d\n", strtonum("0x"$6) - strtonum("0x"$4); exit }' /tmp/chrome_objdump.txt)
+rm -f /tmp/chrome_objdump.txt
 [ -n "$display_text_delta" ] || { echo "ERROR: .text section not found" >&2; exit 1; }
 
-dmabuf_va=$(nm -C "$CHROME" \
-    | awk '/ exo::wayland::WaylandDmabufFeedbackManager::WaylandDmabufFeedbackManager\(exo::Display\*\)/ { print "0x"$1; exit }')
+dmabuf_va=$(awk '/ exo::wayland::WaylandDmabufFeedbackManager::WaylandDmabufFeedbackManager\(exo::Display\*\)/ { print "0x"$1; exit }' /tmp/chrome_nm.txt)
 [ -n "$dmabuf_va" ] || { echo "ERROR: WaylandDmabufFeedbackManager ctor not found" >&2; exit 1; }
 dmabuf_offset=$(awk -v va="$dmabuf_va" -v delta="$display_text_delta" 'BEGIN { printf "%d\n", strtonum(va) + 112 + delta }')
 dmabuf_expected=$(dd if="$CHROME" bs=1 skip="$dmabuf_offset" count=13 2>/dev/null | od -An -tx1 | tr -d ' \n')
@@ -398,7 +401,7 @@ display_expected=$(dd if="$CHROME" bs=1 skip="$display_patch_offset" count=7 2>/
 printf '\351\070\000\000\000\220\220' | dd of="$CHROME" bs=1 seek="$display_patch_offset" conv=notrunc 2>/dev/null
 echo "Patched DisplayConfigurator::Init at $display_patch_offset"
 
-run_pending_va=$(nm -C "$CHROME" | awk '/ display::DisplayConfigurator::RunPendingConfiguration\(\)/ { print "0x"$1; exit }')
+run_pending_va=$(awk '/ display::DisplayConfigurator::RunPendingConfiguration\(\)/ { print "0x"$1; exit }' /tmp/chrome_nm.txt)
 [ -n "$run_pending_va" ] || { echo "ERROR: RunPendingConfiguration not found" >&2; exit 1; }
 run_pending_offset=$(awk -v va="$run_pending_va" -v delta="$display_text_delta" 'BEGIN { printf "%d\n", strtonum(va) + delta }')
 run_pending_expected=$(dd if="$CHROME" bs=1 skip="$run_pending_offset" count=1 2>/dev/null | od -An -tx1 | tr -d ' \n')
@@ -406,7 +409,7 @@ run_pending_expected=$(dd if="$CHROME" bs=1 skip="$run_pending_offset" count=1 2
 printf '\303' | dd of="$CHROME" bs=1 seek="$run_pending_offset" conv=notrunc 2>/dev/null
 echo "Patched RunPendingConfiguration at $run_pending_offset"
 
-redirect_va=$(nm -C "$CHROME" | awk '/ ash::RedirectChromeLogging\(base::CommandLine const&\)/ { print "0x"$1; exit }')
+redirect_va=$(awk '/ ash::RedirectChromeLogging\(base::CommandLine const&\)/ { print "0x"$1; exit }' /tmp/chrome_nm.txt)
 [ -n "$redirect_va" ] || { echo "ERROR: RedirectChromeLogging not found" >&2; exit 1; }
 redirect_offset=$(awk -v va="$redirect_va" -v delta="$display_text_delta" 'BEGIN { printf "%d\n", strtonum(va) + delta }')
 redirect_expected=$(dd if="$CHROME" bs=1 skip="$redirect_offset" count=1 2>/dev/null | od -An -tx1 | tr -d ' \n')
@@ -414,7 +417,7 @@ redirect_expected=$(dd if="$CHROME" bs=1 skip="$redirect_offset" count=1 2>/dev/
 printf '\303' | dd of="$CHROME" bs=1 seek="$redirect_offset" conv=notrunc 2>/dev/null
 echo "Patched RedirectChromeLogging at $redirect_offset"
 
-on_disconnect_va=$(nm -C "$CHROME" | awk '/ ash::mojo_service_manager::.*::OnDisconnect\(/ { print "0x"$1; exit }')
+on_disconnect_va=$(awk '/ ash::mojo_service_manager::.*::OnDisconnect\(/ { print "0x"$1; exit }' /tmp/chrome_nm.txt)
 [ -n "$on_disconnect_va" ] || { echo "ERROR: OnDisconnect not found" >&2; exit 1; }
 on_disconnect_offset=$(awk -v va="$on_disconnect_va" -v delta="$display_text_delta" 'BEGIN { printf "%d\n", strtonum(va) + delta }')
 on_disconnect_expected=$(dd if="$CHROME" bs=1 skip="$on_disconnect_offset" count=1 2>/dev/null | od -An -tx1 | tr -d ' \n')
@@ -422,7 +425,8 @@ on_disconnect_expected=$(dd if="$CHROME" bs=1 skip="$on_disconnect_offset" count
 printf '\303' | dd of="$CHROME" bs=1 seek="$on_disconnect_offset" conv=notrunc 2>/dev/null
 echo "Patched OnDisconnect at $on_disconnect_offset"
 
-has_internal_va=$(nm -C "$CHROME" | awk '/ display::HasInternalDisplay\(\)/ { print "0x"$1; exit }')
+has_internal_va=$(awk '/ display::HasInternalDisplay\(\)/ { print "0x"$1; exit }' /tmp/chrome_nm.txt)
+rm -f /tmp/chrome_nm.txt
 if [ -n "$has_internal_va" ]; then
     has_internal_offset=$(awk -v va="$has_internal_va" -v delta="$display_text_delta" 'BEGIN { printf "%d\n", strtonum(va) + delta }')
     has_internal_expected=$(dd if="$CHROME" bs=1 skip="$has_internal_offset" count=1 2>/dev/null | od -An -tx1 | tr -d ' \n')
