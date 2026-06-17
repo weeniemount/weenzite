@@ -278,7 +278,13 @@ curl -fL \
     "https://commondatastorage.googleapis.com/chromium-browser-snapshots/Linux_ChromiumOS_Full/${REVISION}/chrome-chromeos.zip" \
     -o "$CHROME_TMP/chrome-chromeos.zip"
 unzip -q "$CHROME_TMP/chrome-chromeos.zip" -d "$CHROME_TMP/src"
-cp -r "$CHROME_TMP/src/." "$ASH_SHARE/"
+CHROME_EXTRACTED="$(find "$CHROME_TMP/src" -name "chrome" -type f | head -1)"
+if [ -z "$CHROME_EXTRACTED" ]; then
+    echo "ERROR: chrome binary not found after unzip" >&2
+    exit 1
+fi
+CHROME_EXTRACTED_DIR="$(dirname "$CHROME_EXTRACTED")"
+cp -r "$CHROME_EXTRACTED_DIR/." "$ASH_SHARE/"
 chmod +x "$ASH_SHARE/chrome"
 rm -rf "$CHROME_TMP"
 
