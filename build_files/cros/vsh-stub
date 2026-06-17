@@ -1,0 +1,6 @@
+#!/bin/bash
+export DISPLAY=:10
+export WAYLAND_DISPLAY=wayland-0
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+cd "$HOME" 2>/dev/null || cd /tmp
+exec "${SHELL:-/bin/bash}" -i

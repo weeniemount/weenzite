@@ -2,6 +2,8 @@
 
 set -ouex pipefail
 
+/ctx/cros/build-chromeos-ash.sh
+
 dnf5 install -y tmux qemu libvirt guestfs-tools btop fira-code-fonts jetbrains-mono-fonts cowsay plasma-oxygen
 dnf5 install --skip-unavailable -y \
   f21-backgrounds-kde \

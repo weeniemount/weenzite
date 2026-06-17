@@ -1,0 +1,218 @@
+#!/bin/bash
+
+set -euo pipefail
+
+BRIDGES_DIR=/usr/lib/chromeos-ash/bridges
+PROFILE_DIR=/var/lib/ash-profile
+LOG_DIR="$PROFILE_DIR/test-user/log"
+
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+export DISPLAY="${DISPLAY:-:0}"
+export XAUTHORITY="${XAUTHORITY:-/tmp/ash-xauth}"
+export CHROMEOS_SESSION_LOG_DIR="$LOG_DIR"
+
+cp "$XAUTHORITY" /tmp/ash-xauth 2>/dev/null || true
+chmod 644 /tmp/ash-xauth 2>/dev/null || true
+export XAUTHORITY=/tmp/ash-xauth
+
+mkdir -p "$PROFILE_DIR" "$LOG_DIR" "$PROFILE_DIR/test-user"
+mkdir -p /run/mojo /home/chronos/user
+mkdir -p /var/lib/metrics/structured/chromium/storage/flushed
+mkdir -p /var/log/chrome
+
+BRIDGE_PIDS=()
+
+start_bridge() {
+    local name="$1"
+    local bin="$BRIDGES_DIR/${name}-bridge"
+    [ -x "$bin" ] || { echo "[ash-session] WARNING: $bin not found, skipping" >&2; return; }
+    export PULSE_SERVER="unix:/run/user/$(id -u)/pulse/native"
+    "$bin" >>"$LOG_DIR/${name}-bridge.log" 2>&1 &
+    BRIDGE_PIDS+=($!)
+}
+
+stop_all_bridges() {
+    for pid in "${BRIDGE_PIDS[@]:-}"; do kill "$pid" 2>/dev/null || true; done
+    pkill -x session-bridge  2>/dev/null || true
+    pkill -x shill-bridge    2>/dev/null || true
+    pkill -x cras-bridge     2>/dev/null || true
+    pkill -x power-bridge    2>/dev/null || true
+    pkill -x crostini-bridge 2>/dev/null || true
+    pkill -x rmad-bridge     2>/dev/null || true
+    pkill -x mojo-stub       2>/dev/null || true
+}
+
+trap stop_all_bridges EXIT INT TERM
+
+start_bridge session
+start_bridge shill
+start_bridge cras
+start_bridge power
+start_bridge crostini
+start_bridge rmad
+
+if [ -x "$BRIDGES_DIR/mojo-stub" ]; then
+    "$BRIDGES_DIR/mojo-stub" >>"$LOG_DIR/mojo-stub.log" 2>&1 &
+    BRIDGE_PIDS+=($!)
+fi
+
+sleep 1
+
+touch "$PROFILE_DIR/First Run" "$PROFILE_DIR/.oobe_completed"
+
+if [ ! -f "$PROFILE_DIR/Local State" ]; then
+    printf '%s\n' '{"OOBE":{"oobe_complete":true},"help_app":{"showed_in_oobe":true}}' \
+        > "$PROFILE_DIR/Local State"
+fi
+
+rm -f "$PROFILE_DIR/test-user/AccountManagerTokens.bin" \
+      "$PROFILE_DIR/test-user/trusted_vault.pb"
+
+if [ -f "$PROFILE_DIR/test-user/Preferences" ]; then
+    perl -MJSON::PP -0777 -i -pe '
+        my $j = eval { decode_json($_) };
+        if ($j) {
+            delete $j->{sync}{cached_persistent_auth_error};
+            delete $j->{sync}{gaia_id};
+            delete $j->{sync}{transport_data_per_account};
+            $j->{google}{services}{consented_to_sync} = JSON::PP::false
+                if ref $j->{google}{services} eq "HASH";
+            $j->{signin}{sync_paused_start_time} = ""
+                if ref $j->{signin} eq "HASH";
+            delete $j->{multidevice_setup};
+            $j->{crostini}{enabled} = JSON::PP::true;
+            $j->{crostini}{linux_packages_enabled} = JSON::PP::true;
+            $j->{profile}{exit_type} = "Normal";
+            $j->{profile}{exited_cleanly} = JSON::PP::true;
+            $j->{sessions}{event_log} = [];
+            $_ = encode_json($j);
+        }
+    ' "$PROFILE_DIR/test-user/Preferences" 2>/dev/null || true
+fi
+
+if [ -f "$PROFILE_DIR/Local State" ]; then
+    perl -MJSON::PP -0777 -i -pe '
+        my $j = eval { decode_json($_) };
+        if ($j) {
+            delete $j->{signin}{active_accounts};
+            delete $j->{signin}{active_accounts_last_emitted};
+            $j->{profile}{info_cache}{"test-user"}{is_consented_primary_account} = JSON::PP::false
+                if ref $j->{profile}{info_cache}{"test-user"} eq "HASH";
+            $_ = encode_json($j);
+        }
+    ' "$PROFILE_DIR/Local State" 2>/dev/null || true
+fi
+
+[ -x "$BRIDGES_DIR/register-apps" ] && \
+    "$BRIDGES_DIR/register-apps" "$PROFILE_DIR/test-user/Preferences" >&2 || true
+
+xhost + 2>/dev/null || true
+
+detect_display_bounds() {
+    local bounds
+    bounds="$(xrandr --current 2>/dev/null | awk '
+        / connected primary/ {
+            for (i = 1; i <= NF; i++) {
+                if ($i ~ /^[0-9]+x[0-9]+[+][0-9]+[+][0-9]+/) {
+                    sub(/[+].*/, "", $i); print $i; exit
+                }
+            }
+        }
+        / connected/ && fallback == "" {
+            for (i = 1; i <= NF; i++) {
+                if ($i ~ /^[0-9]+x[0-9]+[+][0-9]+[+][0-9]+/) {
+                    split($i, parts, "+"); fallback = parts[1]
+                }
+            }
+        }
+        END { if (!found && fallback != "") print fallback }
+    ')"
+    [[ "$bounds" =~ ^[0-9]+x[0-9]+$ ]] && printf '%s\n' "$bounds" || printf '1920x1080\n'
+}
+
+ASH_HOST_WINDOW_BOUNDS="$(detect_display_bounds)"
+
+inject_terminal() {
+    local js_src=/usr/lib/chromeos-ash/terminal-ui.js
+    [ -f "$js_src" ] || return
+    for i in $(seq 1 30); do
+        curl -fsS --max-time 1 http://127.0.0.1:9222/json/version >/dev/null 2>&1 && break
+        sleep 2
+    done
+    perl /usr/lib/chromeos-ash/terminal-inject.pl "$js_src" \
+        >>"$LOG_DIR/terminal-inject.log" 2>&1 || true
+}
+
+inject_terminal &
+
+sommelier_loop() {
+    while true; do
+        while [ ! -S "$XDG_RUNTIME_DIR/wayland-0" ]; do sleep 0.5; done
+        until curl -fsS --max-time 1 http://127.0.0.1:9222/json/version >/dev/null 2>&1; do
+            sleep 0.5
+        done
+
+        pkill -x Xwayland 2>/dev/null || true
+        rm -f "$XDG_RUNTIME_DIR/wayland-1" "$XDG_RUNTIME_DIR/wayland-1.lock" \
+              /tmp/.X10-lock /tmp/.X11-unix/X10 2>/dev/null || true
+
+        SOMMELIER_DISPLAY=wayland-0 \
+        WAYLAND_DISPLAY=wayland-0 \
+        XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
+            sommelier \
+                --noop-driver \
+                -X \
+                --socket=wayland-1 \
+                --x-display=10 \
+                --xwayland-path="$(command -v Xwayland)" \
+                --vm-identifier=termina \
+                --no-exit-with-child \
+                -- sleep infinity \
+                2>>"$LOG_DIR/sommelier.log" || true
+        sleep 1
+    done
+}
+
+sommelier_loop &
+SOMMELIER_LOOP_PID=$!
+
+while true; do
+    rm -f "$XDG_RUNTIME_DIR/wayland-0" "$XDG_RUNTIME_DIR/wayland-0.lock" \
+          /tmp/.X10-lock /tmp/.X11-unix/X10 2>/dev/null || true
+
+    /usr/bin/chromeos-ash \
+        --ash-dev-shortcuts \
+        --no-sandbox \
+        --disable-setuid-sandbox \
+        --disable-gpu-sandbox \
+        --disable-stack-profiler \
+        --disable-mojo-broker \
+        --enable-wayland-server \
+        --wayland-server-socket=wayland-0 \
+        --enable-features=Crostini \
+        --disable-features=SamplingProfiler,AccountConsistency,SigninInterception,SampleSystemWebApp,PhoneHub,PhoneHubCameraRoll,PhoneHubNotifications,PhoneHubTaskContinuation,EcheSWA,NearbyShare \
+        --disable-sync \
+        --disable-gaia-services \
+        --disable-signin-scoped-device-id \
+        --allow-failed-policy-fetch-for-test \
+        --ignore-user-profile-mapping-for-tests \
+        --no-first-run \
+        --remote-debugging-port=9222 \
+        --ignore-gpu-blocklist \
+        --x11-display=:0 \
+        --user-data-dir="$PROFILE_DIR" \
+        --login-user="${CHROMEOS_LINUX_LOGIN_USER:-linux@local}" \
+        --login-profile="${CHROMEOS_LINUX_LOGIN_PROFILE:-test-user}" \
+        --ozone-platform=x11 \
+        --ash-host-window-bounds="$ASH_HOST_WINDOW_BOUNDS" \
+        --force-device-scale-factor=1 \
+        2>>"$LOG_DIR/ash.log" || true
+
+    kill "$SOMMELIER_LOOP_PID" 2>/dev/null || true
+    pkill -x sommelier 2>/dev/null || true
+    pkill -x Xwayland  2>/dev/null || true
+
+    while pgrep -x chrome >/dev/null 2>&1; do sleep 2; done
+    sleep 1
+    break
+done
