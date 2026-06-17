@@ -338,22 +338,7 @@ EOF
 
 gcc -shared -fPIC -Wl,-soname,libdisplayfix.so -o libdisplayfix.so displayfix.c
 
-cat > x11shim.c << 'EOF'
-#define _GNU_SOURCE
-#include <stdlib.h>
-#include <dlfcn.h>
-typedef struct _XDisplay Display;
-static Display* (*_real)(const char*) = NULL;
-Display* XOpenDisplay(const char* name) {
-  if (!name || !name[0]) { const char* d = getenv("DISPLAY"); name = (d && *d) ? d : ":0"; }
-  if (!_real) _real = (Display*(*)(const char*))dlsym(RTLD_NEXT, "XOpenDisplay");
-  return _real ? _real(name) : NULL;
-}
-EOF
-
-gcc -shared -fPIC -Wl,-soname,libX11-xdisplay-fix.so.6 -ldl -o libX11.so.6 x11shim.c
-
-cp libdisplayfix.so libX11.so.6 "$ASH_SHARE/"
+cp libdisplayfix.so "$ASH_SHARE/"
 popd
 rm -rf "$BUILD_TMP"
 
