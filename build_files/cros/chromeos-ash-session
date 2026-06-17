@@ -17,6 +17,7 @@ chmod 644 /tmp/ash-xauth 2>/dev/null || true
 export XAUTHORITY=/tmp/ash-xauth
 
 mkdir -p "$PROFILE_DIR" "$LOG_DIR" "$PROFILE_DIR/test-user"
+mkdir -p "$PROFILE_DIR/wallpapers" "$PROFILE_DIR/custom_wallpapers"
 mkdir -p /run/mojo /home/chronos/user
 mkdir -p /var/lib/metrics/structured/chromium/storage/flushed
 mkdir -p /var/log/chrome
