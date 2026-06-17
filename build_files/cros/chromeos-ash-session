@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -euo pipefail
+exec > /tmp/ash-session.log 2>&1
+set -x
 
 BRIDGES_DIR=/usr/lib/chromeos-ash/bridges
 PROFILE_DIR=/var/lib/ash-profile
