@@ -117,23 +117,21 @@ find . -name "*.py" -exec sed -i 's|#!/usr/bin/env python3|#!/usr/bin/python3|g'
 XWAYLAND_PATH="$(command -v Xwayland)"
 
 GBM_STUB_DIR="$(mktemp -d)"
-mkdir -p "$GBM_STUB_DIR/include" "$GBM_STUB_DIR/pkgconfig"
+mkdir -p "$GBM_STUB_DIR/pkgconfig"
 
-cat > "$GBM_STUB_DIR/include/gbm.h" << 'GBMEOF'
-#pragma once
-#include <stdint.h>
-struct gbm_device;
-struct gbm_bo;
-static inline struct gbm_device *gbm_create_device(int fd) { (void)fd; return 0; }
-static inline void gbm_device_destroy(struct gbm_device *d) { (void)d; }
-static inline int gbm_device_get_fd(struct gbm_device *d) { (void)d; return -1; }
-static inline uint32_t gbm_bo_get_stride(struct gbm_bo *bo) { (void)bo; return 0; }
-static inline uint32_t gbm_bo_get_format(struct gbm_bo *bo) { (void)bo; return 0; }
-GBMEOF
+GBM_H="$(find /usr/include -name 'gbm.h' 2>/dev/null | head -1)"
+GBM_INCLUDE_DIR="$(dirname "$GBM_H" 2>/dev/null)"
+
+if [ -z "$GBM_H" ]; then
+    echo "ERROR: gbm.h not found on system" >&2
+    exit 1
+fi
+
+echo "Found gbm.h at $GBM_H"
 
 cat > "$GBM_STUB_DIR/pkgconfig/gbm.pc" << PCEOF
-prefix=$GBM_STUB_DIR
-includedir=\${prefix}/include
+prefix=/usr
+includedir=$GBM_INCLUDE_DIR
 libdir=/usr/lib64
 
 Name: gbm
