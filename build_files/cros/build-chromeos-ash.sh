@@ -147,7 +147,6 @@ export PKG_CONFIG_PATH="$GBM_STUB_DIR/pkgconfig:${PKG_CONFIG_PATH:-}"
 
 meson setup build \
     -Dwith_tests=false \
-    -Dwith_drm_lease=false \
     "-Dxwayland_path=$XWAYLAND_PATH"
 
 ninja -C build
