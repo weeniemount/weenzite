@@ -11,18 +11,12 @@ HELPERS_DIR=/usr/lib/chromeos-ash
 
 mkdir -p "$ASH_SHARE" "$BRIDGES_DIR" "$HELPERS_DIR"
 
-dnf5 install -y \
-    golang git \
-    meson ninja-build pkg-config python3 python3-jinja2 wayland-devel \
-    libxkbcommon-devel mesa-libgbm-devel libdrm-devel pixman-devel \
-    libxcb-devel wayland-protocols-devel xorg-x11-server-Xwayland \
-    binutils patchelf gawk \
-    curl unzip \
-    nspr nss cups-libs dbus-libs expat \
-    libxcb libxkbcommon libX11 libXcomposite libXdamage libXext libXfixes \
-    libXrandr alsa-lib systemd-libs libGL \
-    perl perl-JSON-PP \
-    xrandr xhost xrdb procps-ng
+dnf5 install --skip-unavailable -y \
+    golang \
+    meson ninja-build python3-jinja2 wayland-devel \
+    libxkbcommon-devel libdrm-devel pixman-devel libgbm-devel \
+    libxcb-devel wayland-protocols-devel \
+    patchelf
 
 echo "==> Building Go D-Bus bridges"
 
@@ -121,6 +115,7 @@ XWAYLAND_PATH="$(command -v Xwayland)"
 
 meson setup build \
     -Dwith_tests=false \
+    -Dwith_drm_lease=false \
     "-Dxwayland_path=$XWAYLAND_PATH"
 
 ninja -C build
