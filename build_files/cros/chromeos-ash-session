@@ -1,6 +1,6 @@
 #!/bin/bash
 
-exec > /tmp/ash-session.log 2>&1
+exec >> /tmp/ash-session.log 2>&1
 set -x
 
 BRIDGES_DIR=/usr/lib/chromeos-ash/bridges
@@ -131,8 +131,6 @@ detect_display_bounds() {
     [[ "$bounds" =~ ^[0-9]+x[0-9]+$ ]] && printf '%s\n' "$bounds" || printf '1920x1080\n'
 }
 
-ASH_HOST_WINDOW_BOUNDS="$(detect_display_bounds)"
-
 inject_terminal() {
     local js_src=/usr/lib/chromeos-ash/terminal-ui.js
     [ -f "$js_src" ] || return
@@ -144,54 +142,60 @@ inject_terminal() {
         >>"$LOG_DIR/terminal-inject.log" 2>&1 || true
 }
 
-inject_terminal &
-
-sommelier_loop() {
-    while true; do
-        while [ ! -S "$XDG_RUNTIME_DIR/wayland-0" ]; do sleep 0.5; done
-        until curl -fsS --max-time 1 http://127.0.0.1:9222/json/version >/dev/null 2>&1; do
-            sleep 0.5
-        done
-
-        pkill -x Xwayland 2>/dev/null || true
-        rm -f "$XDG_RUNTIME_DIR/wayland-1" "$XDG_RUNTIME_DIR/wayland-1.lock" \
-              /tmp/.X10-lock /tmp/.X11-unix/X10 2>/dev/null || true
-
-        (
-            for i in $(seq 1 10); do
-                DISPLAY=:10 xrdb -merge /dev/null 2>/dev/null && {
-                    printf 'XTerm*background: black\nXTerm*foreground: white\n*background: black\n*foreground: white\n' \
-                        | DISPLAY=:10 xrdb -merge 2>/dev/null || true
-                    break
-                }
-                sleep 0.5
-            done
-        ) &
-
-        SOMMELIER_DISPLAY=wayland-0 \
-        WAYLAND_DISPLAY=wayland-0 \
-        XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
-            sommelier \
-                --noop-driver \
-                -X \
-                --socket=wayland-1 \
-                --x-display=10 \
-                --xwayland-path="$(command -v Xwayland)" \
-                --vm-identifier=termina \
-                --no-exit-with-child \
-                -- sleep infinity \
-                2>>"$LOG_DIR/sommelier.log" || true
-        sleep 1
-    done
-}
-
-sommelier_loop &
-SOMMELIER_LOOP_PID=$!
+ASH_HOST_WINDOW_BOUNDS="$(detect_display_bounds)"
 
 while true; do
     rm -f "$XDG_RUNTIME_DIR/wayland-0" "$XDG_RUNTIME_DIR/wayland-0.lock" \
           "$XDG_RUNTIME_DIR/wayland-1" "$XDG_RUNTIME_DIR/wayland-1.lock" \
           /tmp/.X10-lock /tmp/.X11-unix/X10 2>/dev/null || true
+
+    mkdir -p "$PROFILE_DIR/test-user"
+    [ -x "$BRIDGES_DIR/register-apps" ] && \
+        "$BRIDGES_DIR/register-apps" "$PROFILE_DIR/test-user/Preferences" >&2 || true
+
+    inject_terminal &
+
+    (
+        while true; do
+            while [ ! -S "$XDG_RUNTIME_DIR/wayland-0" ]; do sleep 0.5; done
+            until curl -fsS --max-time 1 http://127.0.0.1:9222/json/version >/dev/null 2>&1; do
+                sleep 0.5
+            done
+
+            pkill -x Xwayland 2>/dev/null || true
+            rm -f "$XDG_RUNTIME_DIR/wayland-1" "$XDG_RUNTIME_DIR/wayland-1.lock" \
+                  /tmp/.X10-lock /tmp/.X11-unix/X10
+
+            (
+                for i in $(seq 1 10); do
+                    DISPLAY=:10 xrdb -merge /dev/null 2>/dev/null && {
+                        printf 'XTerm*background: black\nXTerm*foreground: white\n*background: black\n*foreground: white\n' \
+                            | DISPLAY=:10 xrdb -merge 2>/dev/null || true
+                        break
+                    }
+                    sleep 0.5
+                done
+            ) &
+
+            SOMMELIER_DISPLAY=wayland-0 \
+            WAYLAND_DISPLAY=wayland-0 \
+            XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
+                sommelier \
+                    --noop-driver \
+                    -X \
+                    --socket=wayland-1 \
+                    --x-display=10 \
+                    --xwayland-path="$(command -v Xwayland)" \
+                    --vm-identifier=termina \
+                    --no-exit-with-child \
+                    -- sleep infinity \
+                    2>>"$PROFILE_DIR/sommelier.log" || true
+            sleep 1
+        done
+    ) &
+    sommelier_bg=$!
+
+    ASH_HOST_WINDOW_BOUNDS="$(detect_display_bounds)"
 
     /usr/bin/chromeos-ash \
         --ash-dev-shortcuts \
@@ -221,13 +225,10 @@ while true; do
         --force-device-scale-factor=1 \
         2>>"$LOG_DIR/ash.log" || true
 
-    kill "$SOMMELIER_LOOP_PID" 2>/dev/null || true
+    kill "$sommelier_bg" 2>/dev/null || true
     pkill -x sommelier 2>/dev/null || true
     pkill -x Xwayland  2>/dev/null || true
 
     while pgrep -x chrome >/dev/null 2>&1; do sleep 2; done
     sleep 1
-
-    sommelier_loop &
-    SOMMELIER_LOOP_PID=$!
 done
