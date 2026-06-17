@@ -207,41 +207,43 @@ gcc -shared -fPIC -Wl,-soname,libgbm.so.1 \
     -x c - << 'STUBEOF'
 #include <stddef.h>
 #include <stdint.h>
+typedef union { void *ptr; int32_t s32; uint32_t u32; int64_t s64; uint64_t u64; } gbm_bo_handle_t;
 void *gbm_create_device(int fd) { return 0; }
 void gbm_device_destroy(void *d) {}
 int gbm_device_get_fd(void *d) { return -1; }
 const char *gbm_device_get_backend_name(void *d) { return "stub"; }
-int gbm_device_is_format_supported(void *d, unsigned f, unsigned u) { return 0; }
-int gbm_device_get_format_modifier_plane_count(void *d, unsigned f, unsigned long long m) { return 0; }
-void *gbm_bo_create(void *d, unsigned w, unsigned h, unsigned f, unsigned fl) { return 0; }
-void *gbm_bo_create_with_modifiers(void *d, unsigned w, unsigned h, unsigned f, const unsigned long long *m, unsigned c) { return 0; }
-void *gbm_bo_import(void *d, unsigned t, void *b, unsigned f) { return 0; }
-void *gbm_bo_map(void *bo, unsigned x, unsigned y, unsigned w, unsigned h, unsigned f, unsigned *s, void **md) { return 0; }
+int gbm_device_is_format_supported(void *d, uint32_t f, uint32_t u) { return 0; }
+int gbm_device_get_format_modifier_plane_count(void *d, uint32_t f, uint64_t m) { return 0; }
+void *gbm_bo_create(void *d, uint32_t w, uint32_t h, uint32_t f, uint32_t fl) { return 0; }
+void *gbm_bo_create_with_modifiers(void *d, uint32_t w, uint32_t h, uint32_t f, const uint64_t *m, unsigned c) { return 0; }
+void *gbm_bo_import(void *d, uint32_t t, void *b, uint32_t f) { return 0; }
+void *gbm_bo_map(void *bo, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t f, uint32_t *s, void **md) { return 0; }
 void gbm_bo_unmap(void *bo, void *md) {}
-unsigned gbm_bo_get_width(void *bo) { return 0; }
-unsigned gbm_bo_get_height(void *bo) { return 0; }
-unsigned gbm_bo_get_stride(void *bo) { return 0; }
-unsigned gbm_bo_get_stride_for_plane(void *bo, int p) { return 0; }
-unsigned gbm_bo_get_format(void *bo) { return 0; }
-unsigned gbm_bo_get_bpp(void *bo) { return 0; }
-unsigned gbm_bo_get_offset(void *bo, int p) { return 0; }
+uint32_t gbm_bo_get_width(void *bo) { return 0; }
+uint32_t gbm_bo_get_height(void *bo) { return 0; }
+uint32_t gbm_bo_get_stride(void *bo) { return 0; }
+uint32_t gbm_bo_get_stride_for_plane(void *bo, int p) { return 0; }
+uint32_t gbm_bo_get_format(void *bo) { return 0; }
+uint32_t gbm_bo_get_bpp(void *bo) { return 0; }
+uint32_t gbm_bo_get_offset(void *bo, int p) { return 0; }
 void *gbm_bo_get_device(void *bo) { return 0; }
-union { void *ptr; int s32; unsigned u32; long long s64; unsigned long long u64; } gbm_bo_get_handle_for_plane(void *bo, int p) { union { void *ptr; int s32; unsigned u32; long long s64; unsigned long long u64; } h = {0}; return h; }
-union { void *ptr; int s32; unsigned u32; long long s64; unsigned long long u64; } gbm_bo_get_handle(void *bo) { union { void *ptr; int s32; unsigned u32; long long s64; unsigned long long u64; } h = {0}; return h; }
+gbm_bo_handle_t gbm_bo_get_handle(void *bo) { gbm_bo_handle_t h; h.u64 = 0; return h; }
+gbm_bo_handle_t gbm_bo_get_handle_for_plane(void *bo, int p) { gbm_bo_handle_t h; h.u64 = 0; return h; }
 int gbm_bo_get_fd(void *bo) { return -1; }
-unsigned long long gbm_bo_get_modifier(void *bo) { return 0; }
+uint64_t gbm_bo_get_modifier(void *bo) { return 0; }
 int gbm_bo_get_plane_count(void *bo) { return 0; }
 int gbm_bo_get_fd_for_plane(void *bo, int p) { return -1; }
-int gbm_bo_write(void *bo, const void *buf, unsigned long count) { return -1; }
+int gbm_bo_write(void *bo, const void *buf, size_t count) { return -1; }
 void gbm_bo_set_user_data(void *bo, void *data, void (*fn)(void*, void*)) {}
 void *gbm_bo_get_user_data(void *bo) { return 0; }
 void gbm_bo_destroy(void *bo) {}
-void *gbm_surface_create(void *d, unsigned w, unsigned h, unsigned f, unsigned fl) { return 0; }
+void *gbm_surface_create(void *d, uint32_t w, uint32_t h, uint32_t f, uint32_t fl) { return 0; }
+void *gbm_surface_create_with_modifiers(void *d, uint32_t w, uint32_t h, uint32_t f, const uint64_t *m, unsigned c) { return 0; }
 void *gbm_surface_lock_front_buffer(void *s) { return 0; }
 void gbm_surface_release_buffer(void *s, void *bo) {}
 int gbm_surface_has_free_buffers(void *s) { return 0; }
 void gbm_surface_destroy(void *s) {}
-char *gbm_format_get_name(unsigned f, void *desc) { return 0; }
+char *gbm_format_get_name(uint32_t f, void *desc) { return 0; }
 STUBEOF
 ln -sf "$GBM_STUB_DIR/libgbm.so.1" "$GBM_STUB_DIR/libgbm.so"
 
