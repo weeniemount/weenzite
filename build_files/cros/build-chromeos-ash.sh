@@ -120,32 +120,86 @@ GBM_STUB_DIR="$(mktemp -d)"
 mkdir -p "$GBM_STUB_DIR/include" "$GBM_STUB_DIR/pkgconfig"
 
 cat > "$GBM_STUB_DIR/include/gbm.h" << 'GBMEOF'
-#pragma once
-#include <stdint.h>
+#ifndef _GBM_H_
+#define _GBM_H_
+#define __GBM__ 1
 #include <stddef.h>
+#include <stdint.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 struct gbm_device;
 struct gbm_bo;
 struct gbm_surface;
-#define GBM_BO_IMPORT_FD      0x5504
-#define GBM_BO_USE_LINEAR     (1 << 4)
-#define GBM_BO_TRANSFER_READ  (1 << 0)
-#define GBM_BO_TRANSFER_WRITE (1 << 1)
-#define GBM_FORMAT_ARGB8888   0x34325241
+union gbm_bo_handle { void *ptr; int32_t s32; uint32_t u32; int64_t s64; uint64_t u64; };
+enum gbm_bo_format { GBM_BO_FORMAT_XRGB8888, GBM_BO_FORMAT_ARGB8888 };
+#define __gbm_fourcc_code(a,b,c,d) ((uint32_t)(a)|((uint32_t)(b)<<8)|((uint32_t)(c)<<16)|((uint32_t)(d)<<24))
+#define GBM_FORMAT_XRGB8888 __gbm_fourcc_code('X','R','2','4')
+#define GBM_FORMAT_ARGB8888 __gbm_fourcc_code('A','R','2','4')
+#define GBM_FORMAT_XBGR8888 __gbm_fourcc_code('X','B','2','4')
+#define GBM_FORMAT_ABGR8888 __gbm_fourcc_code('A','B','2','4')
+#define GBM_FORMAT_NV12     __gbm_fourcc_code('N','V','1','2')
+struct gbm_format_name_desc { char name[5]; };
+enum gbm_bo_flags {
+    GBM_BO_USE_SCANOUT      = (1 << 0),
+    GBM_BO_USE_CURSOR       = (1 << 1),
+    GBM_BO_USE_RENDERING    = (1 << 2),
+    GBM_BO_USE_WRITE        = (1 << 3),
+    GBM_BO_USE_LINEAR       = (1 << 4),
+    GBM_BO_USE_PROTECTED    = (1 << 5),
+    GBM_BO_USE_FRONT_RENDERING = (1 << 6),
+};
+#define GBM_BO_IMPORT_WL_BUFFER   0x5501
+#define GBM_BO_IMPORT_EGL_IMAGE   0x5502
+#define GBM_BO_IMPORT_FD          0x5503
+#define GBM_BO_IMPORT_FD_MODIFIER 0x5504
+#define GBM_MAX_PLANES 4
 struct gbm_import_fd_data { int fd; uint32_t width; uint32_t height; uint32_t stride; uint32_t format; };
-struct gbm_import_fd_modifier_data { uint32_t width; uint32_t height; uint32_t format; uint32_t num_fds; int fds[4]; int strides[4]; int offsets[4]; uint64_t modifier; };
-static inline struct gbm_device *gbm_create_device(int fd) { (void)fd; return 0; }
-static inline void gbm_device_destroy(struct gbm_device *d) { (void)d; }
-static inline int gbm_device_get_fd(struct gbm_device *d) { (void)d; return -1; }
-static inline int gbm_device_is_format_supported(struct gbm_device *d, uint32_t f, uint32_t u) { (void)d;(void)f;(void)u; return 0; }
-static inline struct gbm_bo *gbm_bo_import(struct gbm_device *d, uint32_t t, void *buf, uint32_t flags) { (void)d;(void)t;(void)buf;(void)flags; return 0; }
-static inline void gbm_bo_destroy(struct gbm_bo *bo) { (void)bo; }
-static inline uint32_t gbm_bo_get_width(struct gbm_bo *bo) { (void)bo; return 0; }
-static inline uint32_t gbm_bo_get_height(struct gbm_bo *bo) { (void)bo; return 0; }
-static inline uint32_t gbm_bo_get_stride(struct gbm_bo *bo) { (void)bo; return 0; }
-static inline uint32_t gbm_bo_get_format(struct gbm_bo *bo) { (void)bo; return 0; }
-static inline void *gbm_bo_map(struct gbm_bo *bo, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t flags, uint32_t *stride, void **map_data) { (void)bo;(void)x;(void)y;(void)w;(void)h;(void)flags;(void)stride;(void)map_data; return 0; }
-static inline void gbm_bo_unmap(struct gbm_bo *bo, void *map_data) { (void)bo;(void)map_data; }
-static inline struct gbm_device *gbm_bo_get_device(struct gbm_bo *bo) { (void)bo; return 0; }
+struct gbm_import_fd_modifier_data { uint32_t width; uint32_t height; uint32_t format; uint32_t num_fds; int fds[GBM_MAX_PLANES]; int strides[GBM_MAX_PLANES]; int offsets[GBM_MAX_PLANES]; uint64_t modifier; };
+enum gbm_bo_transfer_flags {
+    GBM_BO_TRANSFER_READ       = (1 << 0),
+    GBM_BO_TRANSFER_WRITE      = (1 << 1),
+    GBM_BO_TRANSFER_READ_WRITE = (GBM_BO_TRANSFER_READ | GBM_BO_TRANSFER_WRITE),
+};
+int gbm_device_get_fd(struct gbm_device *gbm);
+const char *gbm_device_get_backend_name(struct gbm_device *gbm);
+int gbm_device_is_format_supported(struct gbm_device *gbm, uint32_t format, uint32_t flags);
+int gbm_device_get_format_modifier_plane_count(struct gbm_device *gbm, uint32_t format, uint64_t modifier);
+void gbm_device_destroy(struct gbm_device *gbm);
+struct gbm_device *gbm_create_device(int fd);
+struct gbm_bo *gbm_bo_create(struct gbm_device *gbm, uint32_t width, uint32_t height, uint32_t format, uint32_t flags);
+struct gbm_bo *gbm_bo_create_with_modifiers(struct gbm_device *gbm, uint32_t width, uint32_t height, uint32_t format, const uint64_t *modifiers, const unsigned int count);
+struct gbm_bo *gbm_bo_import(struct gbm_device *gbm, uint32_t type, void *buffer, uint32_t flags);
+void *gbm_bo_map(struct gbm_bo *bo, uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint32_t flags, uint32_t *stride, void **map_data);
+void gbm_bo_unmap(struct gbm_bo *bo, void *map_data);
+uint32_t gbm_bo_get_width(struct gbm_bo *bo);
+uint32_t gbm_bo_get_height(struct gbm_bo *bo);
+uint32_t gbm_bo_get_stride(struct gbm_bo *bo);
+uint32_t gbm_bo_get_stride_for_plane(struct gbm_bo *bo, int plane);
+uint32_t gbm_bo_get_format(struct gbm_bo *bo);
+uint32_t gbm_bo_get_bpp(struct gbm_bo *bo);
+uint32_t gbm_bo_get_offset(struct gbm_bo *bo, int plane);
+struct gbm_device *gbm_bo_get_device(struct gbm_bo *bo);
+union gbm_bo_handle gbm_bo_get_handle(struct gbm_bo *bo);
+int gbm_bo_get_fd(struct gbm_bo *bo);
+uint64_t gbm_bo_get_modifier(struct gbm_bo *bo);
+int gbm_bo_get_plane_count(struct gbm_bo *bo);
+union gbm_bo_handle gbm_bo_get_handle_for_plane(struct gbm_bo *bo, int plane);
+int gbm_bo_get_fd_for_plane(struct gbm_bo *bo, int plane);
+int gbm_bo_write(struct gbm_bo *bo, const void *buf, size_t count);
+void gbm_bo_set_user_data(struct gbm_bo *bo, void *data, void (*destroy_user_data)(struct gbm_bo *, void *));
+void *gbm_bo_get_user_data(struct gbm_bo *bo);
+void gbm_bo_destroy(struct gbm_bo *bo);
+struct gbm_surface *gbm_surface_create(struct gbm_device *gbm, uint32_t width, uint32_t height, uint32_t format, uint32_t flags);
+struct gbm_bo *gbm_surface_lock_front_buffer(struct gbm_surface *surface);
+void gbm_surface_release_buffer(struct gbm_surface *surface, struct gbm_bo *bo);
+int gbm_surface_has_free_buffers(struct gbm_surface *surface);
+void gbm_surface_destroy(struct gbm_surface *surface);
+char *gbm_format_get_name(uint32_t gbm_format, struct gbm_format_name_desc *desc);
+#ifdef __cplusplus
+}
+#endif
+#endif
 GBMEOF
 
 cat > "$GBM_STUB_DIR/pkgconfig/gbm.pc" << PCEOF
