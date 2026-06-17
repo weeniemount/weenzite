@@ -117,21 +117,40 @@ find . -name "*.py" -exec sed -i 's|#!/usr/bin/env python3|#!/usr/bin/python3|g'
 XWAYLAND_PATH="$(command -v Xwayland)"
 
 GBM_STUB_DIR="$(mktemp -d)"
-mkdir -p "$GBM_STUB_DIR/pkgconfig"
+mkdir -p "$GBM_STUB_DIR/include" "$GBM_STUB_DIR/pkgconfig"
 
-GBM_H="$(find /usr/include -name 'gbm.h' 2>/dev/null | head -1)"
-GBM_INCLUDE_DIR="$(dirname "$GBM_H" 2>/dev/null)"
-
-if [ -z "$GBM_H" ]; then
-    echo "ERROR: gbm.h not found on system" >&2
-    exit 1
-fi
-
-echo "Found gbm.h at $GBM_H"
+cat > "$GBM_STUB_DIR/include/gbm.h" << 'GBMEOF'
+#pragma once
+#include <stdint.h>
+#include <stddef.h>
+struct gbm_device;
+struct gbm_bo;
+struct gbm_surface;
+#define GBM_BO_IMPORT_FD      0x5504
+#define GBM_BO_USE_LINEAR     (1 << 4)
+#define GBM_BO_TRANSFER_READ  (1 << 0)
+#define GBM_BO_TRANSFER_WRITE (1 << 1)
+#define GBM_FORMAT_ARGB8888   0x34325241
+struct gbm_import_fd_data { int fd; uint32_t width; uint32_t height; uint32_t stride; uint32_t format; };
+struct gbm_import_fd_modifier_data { uint32_t width; uint32_t height; uint32_t format; uint32_t num_fds; int fds[4]; int strides[4]; int offsets[4]; uint64_t modifier; };
+static inline struct gbm_device *gbm_create_device(int fd) { (void)fd; return 0; }
+static inline void gbm_device_destroy(struct gbm_device *d) { (void)d; }
+static inline int gbm_device_get_fd(struct gbm_device *d) { (void)d; return -1; }
+static inline int gbm_device_is_format_supported(struct gbm_device *d, uint32_t f, uint32_t u) { (void)d;(void)f;(void)u; return 0; }
+static inline struct gbm_bo *gbm_bo_import(struct gbm_device *d, uint32_t t, void *buf, uint32_t flags) { (void)d;(void)t;(void)buf;(void)flags; return 0; }
+static inline void gbm_bo_destroy(struct gbm_bo *bo) { (void)bo; }
+static inline uint32_t gbm_bo_get_width(struct gbm_bo *bo) { (void)bo; return 0; }
+static inline uint32_t gbm_bo_get_height(struct gbm_bo *bo) { (void)bo; return 0; }
+static inline uint32_t gbm_bo_get_stride(struct gbm_bo *bo) { (void)bo; return 0; }
+static inline uint32_t gbm_bo_get_format(struct gbm_bo *bo) { (void)bo; return 0; }
+static inline void *gbm_bo_map(struct gbm_bo *bo, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t flags, uint32_t *stride, void **map_data) { (void)bo;(void)x;(void)y;(void)w;(void)h;(void)flags;(void)stride;(void)map_data; return 0; }
+static inline void gbm_bo_unmap(struct gbm_bo *bo, void *map_data) { (void)bo;(void)map_data; }
+static inline struct gbm_device *gbm_bo_get_device(struct gbm_bo *bo) { (void)bo; return 0; }
+GBMEOF
 
 cat > "$GBM_STUB_DIR/pkgconfig/gbm.pc" << PCEOF
-prefix=/usr
-includedir=$GBM_INCLUDE_DIR
+prefix=$GBM_STUB_DIR
+includedir=\${prefix}/include
 libdir=/usr/lib64
 
 Name: gbm
