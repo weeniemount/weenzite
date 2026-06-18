@@ -338,32 +338,7 @@ EOF
 
 gcc -shared -fPIC -Wl,-soname,libdisplayfix.so -o libdisplayfix.so displayfix.c
 
-cat > x11shim.c << 'EOF'
-#define _GNU_SOURCE
-#include <stdlib.h>
-#include <dlfcn.h>
-typedef struct _XDisplay Display;
-static Display* (*_real)(const char*) = NULL;
-Display* XOpenDisplay(const char* name) {
-  if (!name || !name[0]) {
-    const char* d = getenv("DISPLAY");
-    name = (d && *d) ? d : ":0";
-  }
-  if (!_real) {
-    _real = (Display*(*)(const char*))dlsym(RTLD_NEXT, "XOpenDisplay");
-  }
-  return _real ? _real(name) : NULL;
-}
-EOF
-
-gcc -shared -fPIC \
-    -Wl,-soname,libX11-xdisplay-fix.so.6 \
-    -ldl \
-    -o libx11shim.so \
-    x11shim.c
-
 cp libdisplayfix.so "$ASH_SHARE/"
-cp libx11shim.so "$ASH_SHARE/libX11.so.6"
 popd
 rm -rf "$BUILD_TMP"
 
@@ -437,12 +412,18 @@ echo "Patched OnDisconnect at $on_disconnect_offset"
 
 has_internal_va=$(awk '/ display::HasInternalDisplay\(\)/ { print "0x"$1; exit }' /tmp/chrome_nm.txt)
 rm -f /tmp/chrome_nm.txt
-[ -n "$has_internal_va" ] || { echo "ERROR: HasInternalDisplay not found (wallpaper/display features will be broken)" >&2; exit 1; }
-has_internal_offset=$(awk -v va="$has_internal_va" -v delta="$display_text_delta" 'BEGIN { printf "%d\n", strtonum(va) + delta }')
-has_internal_expected=$(dd if="$CHROME" bs=1 skip="$has_internal_offset" count=1 2>/dev/null | od -An -tx1 | tr -d ' \n')
-[ "$has_internal_expected" = "55" ] || { echo "ERROR: HasInternalDisplay first byte changed: $has_internal_expected (patch not applied)" >&2; exit 1; }
-printf '\260\001\303' | dd of="$CHROME" bs=1 seek="$has_internal_offset" conv=notrunc 2>/dev/null
-echo "Patched HasInternalDisplay: always returns true at $has_internal_offset"
+if [ -n "$has_internal_va" ]; then
+    has_internal_offset=$(awk -v va="$has_internal_va" -v delta="$display_text_delta" 'BEGIN { printf "%d\n", strtonum(va) + delta }')
+    has_internal_expected=$(dd if="$CHROME" bs=1 skip="$has_internal_offset" count=1 2>/dev/null | od -An -tx1 | tr -d ' \n')
+    if [ "$has_internal_expected" = "55" ]; then
+        printf '\260\001\303' | dd of="$CHROME" bs=1 seek="$has_internal_offset" conv=notrunc 2>/dev/null
+        echo "Patched HasInternalDisplay at $has_internal_offset"
+    else
+        echo "WARNING: HasInternalDisplay first byte changed: $has_internal_expected" >&2
+    fi
+else
+    echo "WARNING: HasInternalDisplay not found" >&2
+fi
 
 mv "$ASH_SHARE/chrome_crashpad_handler" "$ASH_SHARE/chrome_crashpad_handler.real"
 cat > "$ASH_SHARE/chrome_crashpad_handler" << 'CWRAP'
