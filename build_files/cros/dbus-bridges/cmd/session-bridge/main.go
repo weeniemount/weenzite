@@ -67,12 +67,16 @@ func (s *sessionManager) StartSessionEx(accountID, uniqueID string, chromeOwnerK
 }
 
 func (s *sessionManager) StopSession(uniqueID string) (bool, *dbus.Error) {
-	log.Println("StopSession")
+	if f, err := os.Create("/tmp/ash-session-quit"); err == nil {
+		f.Close()
+	}
 	return true, nil
 }
 
 func (s *sessionManager) StopSessionWithReason(reason uint32) *dbus.Error {
-	log.Printf("StopSessionWithReason: %d", reason)
+	if f, err := os.Create("/tmp/ash-session-quit"); err == nil {
+		f.Close()
+	}
 	return nil
 }
 

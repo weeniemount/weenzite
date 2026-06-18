@@ -18,9 +18,17 @@ export XAUTHORITY=/tmp/ash-xauth
 
 mkdir -p "$PROFILE_DIR" "$LOG_DIR" "$PROFILE_DIR/test-user"
 mkdir -p "$PROFILE_DIR/wallpapers" "$PROFILE_DIR/custom_wallpapers"
+mkdir -p "$PROFILE_DIR/test-user/wallpapers" "$PROFILE_DIR/test-user/custom_wallpapers"
+chmod 755 "$PROFILE_DIR/custom_wallpapers" "$PROFILE_DIR/wallpapers"
 mkdir -p /run/mojo /home/chronos/user
 mkdir -p /var/lib/metrics/structured/chromium/storage/flushed
 mkdir -p /var/log/chrome
+
+if ! grep -q "CHROMEOS_RELEASE_NAME" /etc/lsb-release 2>/dev/null; then
+    mkdir -p /etc
+    printf 'DEVICETYPE=CHROMEBOOK\nCHROMEOS_RELEASE_NAME=Chrome OS\n' \
+        >> /etc/lsb-release 2>/dev/null || true
+fi
 
 BRIDGE_PIDS=()
 
@@ -145,6 +153,8 @@ inject_terminal() {
 
 ASH_HOST_WINDOW_BOUNDS="$(detect_display_bounds)"
 
+rm -f /tmp/ash-session-quit
+
 while true; do
     rm -f "$XDG_RUNTIME_DIR/wayland-0" "$XDG_RUNTIME_DIR/wayland-0.lock" \
           "$XDG_RUNTIME_DIR/wayland-1" "$XDG_RUNTIME_DIR/wayland-1.lock" \
@@ -232,4 +242,9 @@ while true; do
 
     while pgrep -x chrome >/dev/null 2>&1; do sleep 2; done
     sleep 1
+
+    if [ -f /tmp/ash-session-quit ]; then
+        rm -f /tmp/ash-session-quit
+        break
+    fi
 done
