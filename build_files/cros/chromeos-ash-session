@@ -235,17 +235,16 @@ while true; do
         --ash-host-window-bounds="$ASH_HOST_WINDOW_BOUNDS" \
         --force-device-scale-factor=1 \
         2>>"$LOG_DIR/ash.log"
-    _ash_exit=$?
 
     kill "$sommelier_bg" 2>/dev/null || true
     pkill -x sommelier 2>/dev/null || true
     pkill -x Xwayland  2>/dev/null || true
 
-    while pgrep -x chrome >/dev/null 2>&1; do sleep 2; done
-    sleep 1
+    pkill -TERM -x chrome 2>/dev/null || true
+    sleep 2
+    pkill -KILL -x chrome 2>/dev/null || true
 
-    if [ "$_ash_exit" -eq 0 ] || [ -f /tmp/ash-session-quit ]; then
-        rm -f /tmp/ash-session-quit
-        break
-    fi
+    rm -f /tmp/ash-session-quit
+
+    break
 done
