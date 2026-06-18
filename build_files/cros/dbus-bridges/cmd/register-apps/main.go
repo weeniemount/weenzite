@@ -40,17 +40,6 @@ type desktopApp struct {
 	wmClass string
 }
 
-func derivePseudoWMClass(execLine string) string {
-	fields := strings.Fields(execLine)
-	if len(fields) == 0 {
-		return ""
-	}
-	bin := fields[0]
-	bin = filepath.Base(bin)
-	bin = strings.TrimSuffix(bin, ".sh")
-	return bin
-}
-
 func parseDesktop(path, id string) (desktopApp, bool) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -94,9 +83,6 @@ func parseDesktop(path, id string) (desktopApp, bool) {
 	}
 	if appType != "Application" || name == "" {
 		return desktopApp{}, false
-	}
-	if wmClass == "" {
-		wmClass = derivePseudoWMClass(execLine)
 	}
 	return desktopApp{id: id, name: name, exec: execLine, wmClass: wmClass}, true
 }
@@ -215,12 +201,7 @@ func main() {
 
 	for _, app := range apps {
 		id := generateAppID(vmName, containerName, app.id)
-		if existing, exists := registry[id]; exists {
-			existing["exec"] = app.exec
-			existing["startup_wm_class"] = app.wmClass
-			existing["name"] = map[string]string{"": app.name}
-			registry[id] = existing
-		} else {
+		if _, exists := registry[id]; !exists {
 			registry[id] = buildAppEntry(app, vmName, containerName, vmType)
 		}
 	}

@@ -168,21 +168,8 @@ while true; do
 
     (
         while true; do
-            wait_deadline=$(( $(date +%s) + 30 ))
-            while [ ! -S "$XDG_RUNTIME_DIR/wayland-0" ]; do
-                if [ "$(date +%s)" -ge "$wait_deadline" ]; then
-                    echo "[ash-session] timed out waiting for wayland-0 socket" >&2
-                    break 2
-                fi
-                sleep 0.5
-            done
-
-            devtools_deadline=$(( $(date +%s) + 30 ))
+            while [ ! -S "$XDG_RUNTIME_DIR/wayland-0" ]; do sleep 0.5; done
             until curl -fsS --max-time 1 http://127.0.0.1:9222/json/version >/dev/null 2>&1; do
-                if [ "$(date +%s)" -ge "$devtools_deadline" ]; then
-                    echo "[ash-session] timed out waiting for devtools port" >&2
-                    break 2
-                fi
                 sleep 0.5
             done
 
@@ -213,16 +200,9 @@ while true; do
                     --vm-identifier=termina \
                     --no-exit-with-child \
                     -- sleep infinity \
-                    2>>"$PROFILE_DIR/sommelier.log" &
-            sommelier_pid=$!
-            echo "$sommelier_pid" > "$XDG_RUNTIME_DIR/ash-sommelier.pid"
-            wait "$sommelier_pid" || true
+                    2>>"$PROFILE_DIR/sommelier.log" || true
             sleep 1
         done
-        if [ -f "$XDG_RUNTIME_DIR/ash-sommelier.pid" ]; then
-            kill "$(cat "$XDG_RUNTIME_DIR/ash-sommelier.pid")" 2>/dev/null || true
-            rm -f "$XDG_RUNTIME_DIR/ash-sommelier.pid"
-        fi
     ) &
     sommelier_bg=$!
 
@@ -246,6 +226,7 @@ while true; do
         --ignore-user-profile-mapping-for-tests \
         --no-first-run \
         --remote-debugging-port=9222 \
+        --ignore-gpu-blocklist \
         --x11-display=:0 \
         --user-data-dir="$PROFILE_DIR" \
         --login-user="${CHROMEOS_LINUX_LOGIN_USER:-linux@local}" \
@@ -253,33 +234,17 @@ while true; do
         --ozone-platform=x11 \
         --ash-host-window-bounds="$ASH_HOST_WINDOW_BOUNDS" \
         --force-device-scale-factor=1 \
-        --use-gl=swiftshader \
-        --use-angle=swiftshader \
-        --disable-gpu-compositing \
-        --in-process-gpu \
         2>>"$LOG_DIR/ash.log" || true
 
-    if [ -f "$XDG_RUNTIME_DIR/ash-sommelier.pid" ]; then
-        kill "$(cat "$XDG_RUNTIME_DIR/ash-sommelier.pid")" 2>/dev/null || true
-        rm -f "$XDG_RUNTIME_DIR/ash-sommelier.pid"
-    fi
     kill "$sommelier_bg" 2>/dev/null || true
     pkill -x sommelier 2>/dev/null || true
     pkill -x Xwayland  2>/dev/null || true
 
-    ash_wait_deadline=$(( $(date +%s) + 10 ))
-    while pgrep -x chrome >/dev/null 2>&1; do
-        if [ "$(date +%s)" -ge "$ash_wait_deadline" ]; then
-            echo "[ash-session] chrome helper processes still alive after grace period, killing them" >&2
-            pkill -x chrome 2>/dev/null || true
-            sleep 1
-            pkill -9 -x chrome 2>/dev/null || true
-            break
-        fi
-        sleep 1
-    done
-
-    pkill -9 -f "user-data-dir=$PROFILE_DIR" 2>/dev/null || true
-
+    while pgrep -x chrome >/dev/null 2>&1; do sleep 2; done
     sleep 1
+
+    if [ -f /tmp/ash-session-quit ]; then
+        rm -f /tmp/ash-session-quit
+        break
+    fi
 done
