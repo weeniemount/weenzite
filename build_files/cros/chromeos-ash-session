@@ -120,7 +120,7 @@ xhost + 2>/dev/null || true
 
 detect_display_bounds() {
     local bounds
-    bounds="$(xrandr --current 2>/dev/null | awk '
+    bounds="$(DISPLAY=:0 xrandr --current 2>/dev/null | awk '
         / connected primary/ {
             for (i = 1; i <= NF; i++) {
                 if ($i ~ /^[0-9]+x[0-9]+[+][0-9]+[+][0-9]+/) {
@@ -164,58 +164,6 @@ while true; do
     [ -x "$BRIDGES_DIR/register-apps" ] && \
         "$BRIDGES_DIR/register-apps" "$PROFILE_DIR/test-user/Preferences" >&2 || true
 
-    inject_terminal &
-
-    (
-        while true; do
-            while [ ! -S "$XDG_RUNTIME_DIR/wayland-0" ]; do sleep 0.5; done
-            until curl -fsS --max-time 1 http://127.0.0.1:9222/json/version >/dev/null 2>&1; do
-                sleep 0.5
-            done
-
-            pkill -x Xwayland 2>/dev/null || true
-            rm -f "$XDG_RUNTIME_DIR/wayland-1" "$XDG_RUNTIME_DIR/wayland-1.lock" \
-                  /tmp/.X10-lock /tmp/.X11-unix/X10
-
-            (
-                for i in $(seq 1 10); do
-                    DISPLAY=:10 xrdb -merge /dev/null 2>/dev/null && {
-                        printf 'XTerm*background: black\nXTerm*foreground: white\n*background: black\n*foreground: white\n' \
-                            | DISPLAY=:10 xrdb -merge 2>/dev/null || true
-                        break
-                    }
-                    sleep 0.5
-                done
-            ) &
-
-            SOMMELIER_DISPLAY=wayland-0 \
-            WAYLAND_DISPLAY=wayland-0 \
-            XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
-                sommelier \
-                    --noop-driver \
-                    -X \
-                    --socket=wayland-1 \
-                    --x-display=10 \
-                    --xwayland-path="$(command -v Xwayland)" \
-                    --vm-identifier=termina \
-                    --no-exit-with-child \
-                    -- sleep infinity \
-                    2>>"$PROFILE_DIR/sommelier.log" || true
-            sleep 1
-        done
-    ) &
-    sommelier_bg=$!
-
-    for _i in $(seq 1 30); do
-        DISPLAY=:10 xdpyinfo >/dev/null 2>&1 && break
-        sleep 0.5
-    done
-    export DISPLAY=:10
-    export WAYLAND_DISPLAY=wayland-1
-
-    dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY XDG_RUNTIME_DIR 2>/dev/null || true
-    systemctl --user set-environment DISPLAY=:10 WAYLAND_DISPLAY=wayland-1 2>/dev/null || true
-
     ASH_HOST_WINDOW_BOUNDS="$(detect_display_bounds)"
 
     /usr/bin/chromeos-ash \
@@ -244,9 +192,48 @@ while true; do
         --ozone-platform=x11 \
         --ash-host-window-bounds="$ASH_HOST_WINDOW_BOUNDS" \
         --force-device-scale-factor=1 \
-        2>>"$LOG_DIR/ash.log"
+        2>>"$LOG_DIR/ash.log" &
+    ash_pid=$!
 
-    kill "$sommelier_bg" 2>/dev/null || true
+    while [ ! -S "$XDG_RUNTIME_DIR/wayland-0" ]; do sleep 0.5; done
+
+    SOMMELIER_DISPLAY=wayland-0 \
+    WAYLAND_DISPLAY=wayland-0 \
+    XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
+        sommelier \
+            --noop-driver \
+            -X \
+            --socket=wayland-1 \
+            --x-display=10 \
+            --xwayland-path="$(command -v Xwayland)" \
+            --vm-identifier=termina \
+            --no-exit-with-child \
+            -- sleep infinity \
+            2>>"$PROFILE_DIR/sommelier.log" &
+    sommelier_pid=$!
+
+    for _i in $(seq 1 60); do
+        DISPLAY=:10 xdpyinfo >/dev/null 2>&1 && break
+        sleep 0.5
+    done
+
+    if DISPLAY=:10 xdpyinfo >/dev/null 2>&1; then
+        export DISPLAY=:10
+        export WAYLAND_DISPLAY=wayland-1
+        dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY XDG_RUNTIME_DIR 2>/dev/null || true
+        systemctl --user set-environment DISPLAY=:10 WAYLAND_DISPLAY=wayland-1 2>/dev/null || true
+
+        printf 'XTerm*background: black\nXTerm*foreground: white\n*background: black\n*foreground: white\n' \
+            | DISPLAY=:10 xrdb -merge 2>/dev/null || true
+    else
+        echo "[ash-session] WARNING: sommelier Xwayland (:10) never became ready" >&2
+    fi
+
+    inject_terminal &
+
+    wait "$ash_pid"
+
+    kill "$sommelier_pid" 2>/dev/null || true
     pkill -x sommelier 2>/dev/null || true
     pkill -x Xwayland  2>/dev/null || true
 
