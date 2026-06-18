@@ -206,6 +206,16 @@ while true; do
     ) &
     sommelier_bg=$!
 
+    for _i in $(seq 1 30); do
+        DISPLAY=:10 xdpyinfo >/dev/null 2>&1 && break
+        sleep 0.5
+    done
+    export DISPLAY=:10
+    export WAYLAND_DISPLAY=wayland-1
+
+    dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY XDG_RUNTIME_DIR 2>/dev/null || true
+    systemctl --user set-environment DISPLAY=:10 WAYLAND_DISPLAY=wayland-1 2>/dev/null || true
+
     ASH_HOST_WINDOW_BOUNDS="$(detect_display_bounds)"
 
     /usr/bin/chromeos-ash \
