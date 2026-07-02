@@ -473,6 +473,18 @@ func launchApp(app desktopApp) error {
 		}
 	}
 	cmd := exec.Command(program, parts[1:]...)
+	xdgRt := xdgRuntimeDir()
+
+	dbusAddr := os.Getenv("DBUS_SESSION_BUS_ADDRESS")
+	if dbusAddr == "" {
+		dbusAddr = "unix:path=" + xdgRt + "/bus"
+	}
+
+	xauth := os.Getenv("XAUTHORITY")
+	if xauth == "" {
+		xauth = "/tmp/ash-xauth"
+	}
+
 	overrides := []string{
 		"DISPLAY=:10",
 		"WAYLAND_DISPLAY=wayland-0",
@@ -480,7 +492,9 @@ func launchApp(app desktopApp) error {
 		"GDK_BACKEND=x11",
 		"QT_QPA_PLATFORM=xcb",
 		"XDG_DATA_DIRS=/run/opengl-driver/share:/run/current-system/sw/share:/usr/share",
-		"XDG_RUNTIME_DIR=" + xdgRuntimeDir(),
+		"XDG_RUNTIME_DIR=" + xdgRt,
+		"DBUS_SESSION_BUS_ADDRESS=" + dbusAddr,
+		"XAUTHORITY=" + xauth,
 	}
 	cmd.Env = append(overrides, os.Environ()...)
 	return cmd.Start()
