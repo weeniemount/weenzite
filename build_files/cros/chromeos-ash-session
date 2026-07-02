@@ -75,6 +75,19 @@ if [ ! -f "$PROFILE_DIR/Local State" ]; then
         > "$PROFILE_DIR/Local State"
 fi
 
+perl -MJSON::PP -0777 -i -pe '
+    my $j = eval { decode_json($_) };
+    if ($j) {
+        $j->{user_image_info}{"linux\@local"}{wallpaper_files_id} //= "test-user-wallpaper";
+        $_ = encode_json($j);
+    }
+' "$PROFILE_DIR/Local State" 2>/dev/null || true
+
+mkdir -p "$PROFILE_DIR/custom_wallpapers/test-user-wallpaper/small" \
+         "$PROFILE_DIR/custom_wallpapers/test-user-wallpaper/large" \
+         "$PROFILE_DIR/custom_wallpapers/test-user-wallpaper/original"
+chmod -R 755 "$PROFILE_DIR/custom_wallpapers"
+
 rm -f "$PROFILE_DIR/test-user/AccountManagerTokens.bin" \
       "$PROFILE_DIR/test-user/trusted_vault.pb"
 
