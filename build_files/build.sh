@@ -112,6 +112,9 @@ sed -i \
   -e 's|BUG_REPORT_URL=".*"|BUG_REPORT_URL="https://github.com/weeniemount/weenzite/issues/"|' \
   /usr/lib/os-release
 
+sed -i -e 's/^ID=.*/ID=fedora/' /usr/lib/os-release
+grep -q '^ID_LIKE=' /usr/lib/os-release || echo 'ID_LIKE=fedora' >> /usr/lib/os-release
+
 # end of rebrand gaming
 
 # more plasmoid gaming
