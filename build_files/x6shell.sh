@@ -16,7 +16,20 @@ git clone --depth=1 https://gitgud.io/x6shell/workspace/ x6shell
 	cd x6shell
 	echo "smelting sand and turning it into OSX"
 	PATH="/usr/weenzite/slop:$PATH" bash install.sh
+	echo "OSX smelted"
+)
+echo "digging up more sand"
+git clone --depth=1 https://gitgud.io/x6shell/aurora aurora
+(
+	cd aurora
+	echo "smelting sand into aurora"
+	sed -i 's/find_package(Plymouth REQUIRED)/find_package(Plymouth)/' CMakeLists.txt
+	sed -i 's/^add_subdirectory(plymouth)$/if(Plymouth_FOUND)\n    add_subdirectory(plymouth)\nendif()/' CMakeLists.txt
+
+	PATH="/usr/weenzite/slop:$PATH" bash install.sh
+	echo "aurora smelted"
 )
 echo "cleaning up"
 rm -rf x6shell
+rm -rf aurora
 rm -rf /usr/weenzite/slop/sudo
