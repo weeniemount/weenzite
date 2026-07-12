@@ -29,7 +29,27 @@ git clone --depth=1 https://gitgud.io/x6shell/aurora aurora
 	PATH="/usr/weenzite/slop:$PATH" bash install.sh
 	echo "aurora smelted"
 )
+echo "digging up even more sand"
+git clone --depth=1 https://gitgud.io/x6shell/cougar cougar
+(
+	cd cougar
+	echo "smelting sand into cougar"
+	cmake -B build -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+	cmake --build build
+	PATH="/usr/weenzite/slop:$PATH" sudo cmake --install build
+	echo "cougar smelted"
+)
+echo "digging up the last bit of sand"
+git clone --depth=1 https://gitgud.io/x6shell/kwin-components kwin-components
+(
+	cd kwin-components
+	echo "smelting sand into kwin-components"
+	PATH="/usr/weenzite/slop:$PATH" ./install.sh
+	echo "kwin-components smelted"
+)
 echo "cleaning up"
 rm -rf x6shell
 rm -rf aurora
+rm -rf cougar
+rm -rf kwin-components
 rm -rf /usr/weenzite/slop/sudo
