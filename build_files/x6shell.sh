@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -ouex pipefail
+
+DEVEL_PKGS="pt6-qtbase-private-devel layer-shell-qt-devel kf6-kwindowsystem-devel kf6-kcoreaddons-devel kf6-kwidgetsaddons-devel kf6-kconfigwidgets-devel kf6-kconfig-devel kf6-ki18n-devel kf6-kservice-devel kf6-kcmutils-devel extra-cmake-modules kf6-kcrash-devel kf6-kdbusaddons-devel kf6-kpackage-devel kf6-kxmlgui-devel kf6-kio-devel kf6-kstatusnotifieritem-devel kf6-knotifications-devel kf6-kiconthemes-devel plasma-activities-devel plasma-workspace-devel libplasma-devel kf6-kitemmodels-devel plasma-wayland-protocols-devel kwayland-devel"
+
+printf '#!/bin/bash\nexec "$@"\n' > /usr/weenzite/slop/sudo
+chmod +x /usr/weenzite/slop/sudo
+
+echo "infusing with OSX"
+echo "obtaining furnace"
+dnf5 -y install gcc gcc-c++ make unzip kvantum git plasma-wayland-protocols $DEVEL_PKGS --skip-unavailable
+echo "digging up sand"
+git clone --depth=1 https://gitgud.io/x6shell/workspace/ x6shell
+(
+	cd x6shell
+	echo "smelting sand and turning it into OSX"
+	PATH="/usr/weenzite/slop:$PATH" bash install.sh
+)
+echo "cleaning up"
+rm -rf x6shell
+rm -rf /usr/weenzite/slop/sudo
