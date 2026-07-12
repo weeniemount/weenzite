@@ -44,6 +44,7 @@ git clone --depth=1 https://gitgud.io/x6shell/kwin-components kwin-components
 (
 	cd kwin-components
 	echo "smelting sand into kwin-components"
+	chmod +x ./install.sh
 	PATH="/usr/weenzite/slop:$PATH" ./install.sh
 	echo "kwin-components smelted"
 )
