@@ -3,6 +3,7 @@
 set -ouex pipefail
 
 bash /ctx/cros/build-chromeos-ash.sh
+bash /ctx/aeros.sh
 
 dnf5 install -y tmux qemu libvirt guestfs-tools btop fira-code-fonts jetbrains-mono-fonts cowsay plasma-oxygen
 dnf5 install --skip-unavailable -y \
