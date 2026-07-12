@@ -6,7 +6,7 @@ DEVEL_PKGS="plasma-workspace-devel libksysguard-devel qt6-qtmultimedia-devel qt6
 
 echo "infusing with aeros"
 echo "obtaining furnace"
-dnf5 -y install gcc gcc-c++ make unzip kvantum git plasma-wayland-protocols $DEVEL_PKGS
+dnf5 -y --skip-broken --skip-unavailable install gcc gcc-c++ make unzip kvantum git plasma-wayland-protocols $DEVEL_PKGS
 echo "digging up sand"
 git clone --depth=1 https://gitgud.io/wackyideas/aerothemeplasma.git aerothemeplasma
 (
