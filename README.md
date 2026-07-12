@@ -2,7 +2,7 @@
 
 ![Weenzite logo](system_files/overrides/usr/share/pixmaps/fedora-logo-sprite.png)
 
-this is a bootc image based off of bazzite-nvidia-open that basically applies most of the stuff from weenOS, but for like me to daily use instead or whatever. will probably update with stuff from time to time.
+this is a bootc image based off of bazzite-nvidia-open that basically applies most of the stuff from weenOS, but for like me to daily use instead or whatever. will probably update with stuff from time to time. also has the chromiumOS desktop for no reason borrowed from https://github.com/vitalyavolyn/chromeos-linux/
 
 currently has qemu and some older fedora wallpapers. also disables the NTFS/exFAT nag window and has the KDE oxygen theme
 
