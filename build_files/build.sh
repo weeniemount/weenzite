@@ -11,6 +11,15 @@ dnf5 install -y tmux qemu libvirt guestfs-tools btop fira-code-fonts jetbrains-m
 #titanoboa stuff (why did they make it more complicated to build a live iso :wilted_rose)
 dnf5 install -y grub2-efi-x64 grub2-efi-x64-cdboot grub2-pc grub2-pc-modules shim-x64 grub2-tools grub2-tools-extra
 
+mkdir -p /boot/efi/EFI/fedora /boot/efi/EFI/BOOT
+
+shim_ver=$(rpm -q --qf '%{version}-%{release}' shim-x64)
+grub_ver=$(rpm -q --qf '%{epoch}:%{version}-%{release}' grub2-efi-x64 | sed 's/^(none)://')
+
+cp -av "/usr/lib/efi/shim/${shim_ver}/EFI/BOOT/." /boot/efi/EFI/BOOT/
+cp -av "/usr/lib/efi/shim/${shim_ver}/EFI/fedora/." /boot/efi/EFI/fedora/
+cp -av "/usr/lib/efi/grub2/${grub_ver}/EFI/fedora/." /boot/efi/EFI/fedora/
+
 bash /ctx/wallpapers.sh
 
 # download ween stuff
