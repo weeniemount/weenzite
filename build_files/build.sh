@@ -9,7 +9,7 @@ bash /ctx/x6shell.sh
 dnf5 install -y tmux qemu libvirt guestfs-tools btop fira-code-fonts jetbrains-mono-fonts cowsay plasma-oxygen 
 
 #titanoboa stuff (why did they make it more complicated to build a live iso :wilted_rose)
-dnf5 install -y grub2-efi-x64 grub2-efi-x64-cdboot grub2-pc grub2-pc-modules shim-x64 grub2-tools grub2-tools-extra
+dnf5 install -y grub2-efi-x64 grub2-efi-x64-cdboot grub2-pc grub2-pc-modules shim-x64 grub2-tools grub2-tools-extra dracut-live
 
 mkdir -p /boot/efi/EFI/fedora /boot/efi/EFI/BOOT
 
@@ -106,5 +106,5 @@ fi
 
 # and then forcefully rebuild initrd!!!!... maybe this one will work
 QUALIFIED_KERNEL="$(dnf5 repoquery --installed --queryformat='%{evr}.%{arch}' "kernel")"
-/usr/bin/dracut --no-hostonly --kver "$QUALIFIED_KERNEL" --reproducible --zstd -v --add ostree --add fido2 -f "/usr/lib/modules/$QUALIFIED_KERNEL/initramfs.img"
+/usr/bin/dracut --no-hostonly --kver "$QUALIFIED_KERNEL" --reproducible --zstd -v --add ostree --add fido2 --add dmsquash-live -f "/usr/lib/modules/$QUALIFIED_KERNEL/initramfs.img"
 chmod 0600 /usr/lib/modules/"$QUALIFIED_KERNEL"/initramfs.img
