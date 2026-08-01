@@ -8,7 +8,7 @@ bash /ctx/x6shell.sh
 
 dnf5 install -y tmux qemu libvirt guestfs-tools btop fira-code-fonts jetbrains-mono-fonts cowsay plasma-oxygen
 # gnome knows best
-dnf5 install -y gnome-shell nautilus gnome-extensions-app gnome-console gnome-mines gnome-control-center sushi gnome-backgrounds
+dnf5 install -y gnome-shell nautilus gnome-extensions-app gnome-console gnome-mines gnome-control-center sushi gnome-backgrounds gnome-system-monitor gnome-text-editor
 
 #titanoboa stuff (why did they make it more complicated to build a live iso :wilted_rose)
 dnf5 install -y grub2-efi-x64 grub2-efi-x64-cdboot grub2-pc grub2-pc-modules shim-x64 grub2-tools grub2-tools-extra dracut-live
