@@ -78,6 +78,7 @@ rm -rf /tmp/ball
 # turn off the NTFS/exFAT partition mount nag stolen from quinces repo
 systemctl --global disable ntfs-nag.service
 rm /usr/lib/systemd/user/ntfs-nag.service
+rm /usr/libexec/ntfs-exfat-monitor-script
 
 systemctl enable libvirtd.service
 systemctl enable podman.socket
