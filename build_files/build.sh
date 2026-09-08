@@ -6,7 +6,7 @@ bash /ctx/cros/build-chromeos-ash.sh
 bash /ctx/aeros.sh
 bash /ctx/x6shell.sh
 
-dnf5 install -y tmux qemu libvirt guestfs-tools btop fira-code-fonts jetbrains-mono-fonts cowsay plasma-oxygen
+dnf5 install -y tmux qemu libvirt guestfs-tools btop fira-code-fonts jetbrains-mono-fonts cowsay plasma-oxygen android-tools
 # gnome knows best
 dnf5 install -y gnome-shell nautilus gnome-extensions-app gnome-console gnome-mines gnome-control-center sushi gnome-backgrounds gnome-system-monitor gnome-text-editor
 
