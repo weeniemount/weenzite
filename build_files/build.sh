@@ -15,7 +15,7 @@ dnf5 install -y grub2-efi-x64 grub2-efi-x64-cdboot grub2-pc grub2-pc-modules shi
 
 dnf5 copr enable avengemedia/dms
 dnf5 install -y niri dms
-systemctl add-wants niri.service dms
+systemctl --global add-wants niri.service dms
 
 mkdir -p /boot/efi/EFI/fedora /boot/efi/EFI/BOOT
 
