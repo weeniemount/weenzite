@@ -17,6 +17,8 @@ dnf5 copr enable avengemedia/dms
 dnf5 install -y niri dms kitty
 systemctl --global add-wants niri.service dms
 
+dnf5 install -y @cosmic-desktop-environment
+
 mkdir -p /boot/efi/EFI/fedora /boot/efi/EFI/BOOT
 
 shim_ver=$(rpm -q --qf '%{version}-%{release}' shim-x64)
