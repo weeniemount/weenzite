@@ -11,7 +11,9 @@ echo "infusing with aeros"
 echo "obtaining furnace"
 dnf5 -y install gcc gcc-c++ make unzip kvantum git plasma-wayland-protocols $DEVEL_PKGS --skip-unavailable
 echo "digging up sand"
-git clone --depth=1 https://gitgud.io/wackyideas/aerothemeplasma.git aerothemeplasma
+# black magic to get the installed plasma version hopefully
+PLASMA_VERSION="$(rpm -q --info libplasma  | awk '/Version/ {gsub(/\.[0-9]*$/, ""); print $3}')"
+git clone --depth=1 --branch=Plasma/$PLASMA_VERSION https://gitgud.io/wackyideas/aerothemeplasma.git aerothemeplasma
 (
 	cd aerothemeplasma
 	echo "smelting sand and turning it into aeros"
