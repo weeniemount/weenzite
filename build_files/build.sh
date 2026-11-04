@@ -8,6 +8,11 @@ bash /ctx/aeros.sh
 #bash /ctx/x6shell.sh
 
 dnf5 install -y tmux qemu libvirt guestfs-tools btop fira-code-fonts jetbrains-mono-fonts cowsay plasma-oxygen android-tools
+
+dnf5 versionlock delete terra-xorg-x11-server-Xwayland || true
+dnf5 -y --enablerepo=terra-extras downgrade terra-xorg-x11-server-Xwayland-24.1.13-3.fc45
+dnf5 versionlock add terra-xorg-x11-server-Xwayland || true
+
 # gnome knows best
 dnf5 install -y gnome-shell nautilus gnome-extensions-app gnome-console gnome-mines gnome-control-center sushi gnome-backgrounds gnome-system-monitor gnome-text-editor
 
