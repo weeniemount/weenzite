@@ -3,8 +3,8 @@
 set -ouex pipefail
 
 bash /ctx/cros/build-chromeos-ash.sh
-# both of thsese are disabled until they update to plasma 6.8 hopefully please aeros i need this
-#bash /ctx/aeros.sh
+bash /ctx/aeros.sh
+# disabled until they update to plasma 6.8 hopefully please aeros i need this
 #bash /ctx/x6shell.sh
 
 dnf5 install -y tmux qemu libvirt guestfs-tools btop fira-code-fonts jetbrains-mono-fonts cowsay plasma-oxygen android-tools
