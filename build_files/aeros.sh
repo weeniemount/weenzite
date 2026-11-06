@@ -9,7 +9,12 @@ chmod +x /usr/weenzite/slop/sudo
 
 echo "infusing with aeros"
 echo "obtaining furnace"
-dnf5 -y install gcc gcc-c++ make unzip kvantum git plasma-wayland-protocols $DEVEL_PKGS --skip-unavailable
+dnf5 -y install gcc gcc-c++ make unzip kvantum git ccache plasma-wayland-protocols $DEVEL_PKGS --skip-unavailable
+echo "aeros cache"
+export PATH="/usr/lib64/ccache:$PATH"
+export CCACHE_DIR=/ccache
+export CCACHE_MAXSIZE=2G
+export CCACHE_NOHASHDIR=1
 echo "digging up sand"
 # black magic to get the installed plasma version hopefully
 PLASMA_VERSION="$(rpm -q --info libplasma  | awk '/Version/ {gsub(/\.[0-9]*$/, ""); print $3}')"

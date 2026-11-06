@@ -93,6 +93,19 @@ jobs:
           sep-tags: " "
           sep-annotations: " "
 
+      - name: get week for cache expiry
+        id: week
+        run: echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+
+      - name: restore smelted aeros cache!!
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/ccache-aeros
+          key: ccache-aeros-${{ steps.week.outputs.week }}
+
+      - name: ccache dir
+        run: mkdir -p "${{ runner.temp }}/ccache-aeros"
+
       - name: Build Image
         id: build_image
         uses: redhat-actions/buildah-build@719e3c40d8af9790c23eca13f7daa339f2867034 # v3.1.0
@@ -105,6 +118,8 @@ jobs:
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
           oci: false
+          extra-args: |
+            --volume ${{ runner.temp }}/ccache-aeros:/ccache:rw
 
       # Rechunk is a script that we use on Universal Blue to make sure there isnt a single huge layer when your image gets published.
       # This does not make your image faster to download, just provides better resumability and fixes a few errors.
