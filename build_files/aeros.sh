@@ -2,7 +2,7 @@
 
 set -ouex pipefail
 
-DEVEL_PKGS="plasma-workspace-devel libksysguard-devel qt6-qtmultimedia-devel qt6-qt5compat-devel libplasma-devel qt6-qtbase-devel qt6-qtwayland-devel plasma-activities-devel kf6-kpackage-devel kf6-kglobalaccel-devel qt6-qtsvg-devel wayland-devel kf6-ksvg-devel kf6-kcrash-devel kf6-kguiaddons-devel kf6-kcmutils-devel kf6-kio-devel kdecoration-devel kf6-ki18n-devel kf6-knotifications-devel kf6-kirigami-devel kf6-kiconthemes-devel cmake gmp-ecm-devel kf5-plasma-devel libepoxy-devel kwin-devel kf6-karchive kf6-karchive-devel plasma-wayland-protocols-devel qt6-qtbase-private-devel qt6-qtbase-devel kf6-knewstuff-devel kf6-knotifyconfig-devel kf6-attica-devel kf6-krunner-devel kf6-kdbusaddons-devel kf6-sonnet-devel plasma5support-devel plasma-activities-stats-devel polkit-qt6-1-devel libdrm-devel kf6-kitemmodels-devel kf6-kstatusnotifieritem-devel kf6-frameworkintegration-devel wayland-protocols-devel ninja cmake extra-cmake-modules layer-shell-qt-devel"
+DEVEL_PKGS="plasma-workspace-devel libksysguard-devel qt6-qtmultimedia-devel qt6-qt5compat-devel libplasma-devel qt6-qtbase-devel qt6-qtwayland-devel plasma-activities-devel kf6-kpackage-devel kf6-kglobalaccel-devel qt6-qtsvg-devel wayland-devel kf6-ksvg-devel kf6-kcrash-devel kf6-kguiaddons-devel kf6-kcmutils-devel kf6-kio-devel kdecoration-devel kf6-ki18n-devel kf6-knotifications-devel kf6-kirigami-devel kf6-kiconthemes-devel cmake gmp-ecm-devel kf5-plasma-devel libepoxy-devel kwin-devel kf6-karchive kf6-karchive-devel plasma-wayland-protocols-devel qt6-qtbase-private-devel qt6-qtbase-devel kf6-knewstuff-devel kf6-knotifyconfig-devel kf6-attica-devel kf6-krunner-devel kf6-kdbusaddons-devel kf6-sonnet-devel plasma5support-devel plasma-activities-stats-devel polkit-qt6-1-devel libdrm-devel kf6-kitemmodels-devel kf6-kstatusnotifieritem-devel kf6-frameworkintegration-devel wayland-protocols-devel ninja cmake extra-cmake-modules layer-shell-qt-devel kf6-kunitconversion-devel kf6-kholidays-devel"
 
 printf '#!/bin/bash\nexec "$@"\n' > /usr/weenzite/slop/sudo
 chmod +x /usr/weenzite/slop/sudo
@@ -24,6 +24,13 @@ git clone --depth=1 --branch=Plasma/$PLASMA_VERSION https://gitgud.io/wackyideas
 	echo "smelting sand and turning it into aeros"
 	PATH="/usr/weenzite/slop:$PATH" CMAKE_GENERATOR=Ninja bash install.sh --skip-x11
 )
+git clone --depth=1 https://gitgud.io/aeroshell/aeroshell-gadgets aeroshell-gadgets
+(
+	cd aeroshell-gadgets
+	echo "smelting gadgets too"
+	PATH="/usr/weenzite/slop:$PATH" CMAKE_GENERATOR=Ninja bash install.sh
+)
 echo "cleaning up"
 rm -rf aerothemeplasma
+rm -rf aeroshell-gadgets
 rm -rf /usr/weenzite/slop/sudo
