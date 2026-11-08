@@ -128,11 +128,13 @@ dnf install -y gnome-shell-extension-gsconnect nautilus-python nautilus-extensio
 git clone https://github.com/aunetx/blur-my-shell /tmp/blur-my-shell
 cd /tmp/blur-my-shell
 sed -i 's/$(HOME)\/.local\/share\/gnome-shell/\/usr\/share\/gnome-shell/g' Makefile
-make install
-cd /
+make build
 
-rm -rf /usr/share/glib-2.0/schemas/gschemas.compiled
-glib-compile-schemas /usr/share/glib-2.0/schemas
+WHATAMIDOING=/usr/share/gnome-shell/extensions/blur-my-shell@aunetx
+mkdir -p "$WHATAMIDOING"
+unzip -o build/*.shell-extension.zip -d "$WHATAMIDOING"
+glib-compile-schemas "$WHATAMIDOING/schemas"
+cd /
 
 rm -rf /tmp/blur-my-shell
 
