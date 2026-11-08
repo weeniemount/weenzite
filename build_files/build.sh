@@ -121,9 +121,17 @@ dnf install -y gnome-shell-extension-gsconnect nautilus-python nautilus-extensio
 # Panel Workspace Scroll, GNOME Fuzzy App Search, Rounded Window Corners Native, Static Workspace Background,
 # Tailscale, Window Is Ready - Notification Remover, Solaar, Wiggly,
 # Dash to Dock, Dhruva, Global Menu, Compiz alike magic lamp effect,
-# Compiz windows effect, Kiwi Menu
+# Compiz windows effect, Kiwi Menu, Burn my Windows
 /tmp/scripts/run_module.sh 'gnome-extensions' \
-    '{"type":"gnome-extensions","install":["6523","3956","10809","10017","1007","6162","8969", "9495", "307", "3210", "3740", "11414", "8697"]}'
+    '{"type":"gnome-extensions","install":["6523","3956","10809","10017","1007","6162","8969", "9495", "307", "3210", "3740", "11414", "8697", "4679"]}'
+
+git clone https://github.com/aunetx/blur-my-shell /tmp/blur-my-shell
+cd /tmp/blur-my-shell
+sed -i 's/$(HOME)\/.local\/share\/gnome-shell/\/usr\/share\/gnome-shell/g' Makefile
+make install
+cd /
+
+rm -rf /tmp/blur-my-shell
 
 # and then forcefully rebuild initrd!!!!... maybe this one will work
 QUALIFIED_KERNEL="$(dnf5 repoquery --installed --queryformat='%{evr}.%{arch}' "kernel")"
