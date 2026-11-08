@@ -98,7 +98,7 @@ jobs:
         run: echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
 
       - name: restore smelted aeros cache!!
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ runner.temp }}/ccache-aeros
           key: ccache-aeros-${{ steps.week.outputs.week }}
