@@ -118,8 +118,12 @@ fi
 
 # todo: preinstall gnome-shell-extension-blur-my-shell when it gets 
 dnf install -y gnome-shell-extension-gsconnect nautilus-python nautilus-extensions
+# Panel Workspace Scroll, GNOME Fuzzy App Search, Rounded Window Corners Native, Static Workspace Background,
+# Tailscale, Window Is Ready - Notification Remover, Solaar, Wiggly,
+# Dash to Dock, Dhruva, Global Menu, Compiz alike magic lamp effect,
+# Compiz windows effect, Kiwi Menu
 /tmp/scripts/run_module.sh 'gnome-extensions' \
-    '{"type":"gnome-extensions","install":["6523","3956","10809","10017","1007","6162","8969"]}'
+    '{"type":"gnome-extensions","install":["6523","3956","10809","10017","1007","6162","8969", "9495", "307", "3210", "3740", "11414", "8697"]}'
 
 # and then forcefully rebuild initrd!!!!... maybe this one will work
 QUALIFIED_KERNEL="$(dnf5 repoquery --installed --queryformat='%{evr}.%{arch}' "kernel")"
