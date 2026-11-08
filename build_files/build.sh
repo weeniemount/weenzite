@@ -131,6 +131,9 @@ sed -i 's/$(HOME)\/.local\/share\/gnome-shell/\/usr\/share\/gnome-shell/g' Makef
 make install
 cd /
 
+rm -rf /usr/share/glib-2.0/schemas/gschemas.compiled
+glib-compile-schemas /usr/share/glib-2.0/schemas
+
 rm -rf /tmp/blur-my-shell
 
 # and then forcefully rebuild initrd!!!!... maybe this one will work
