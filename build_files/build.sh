@@ -116,6 +116,11 @@ if [ -f /etc/group ]; then
     fi
 fi
 
+# todo: preinstall gnome-shell-extension-blur-my-shell when it gets 
+dnf install -y gnome-shell-extension-gsconnect nautilus-python nautilus-extensions
+/tmp/scripts/run_module.sh 'gnome-extensions' \
+    '{"type":"gnome-extensions","install":["6523","3956","10809","10017","1007","6162","8969"]}'
+
 # and then forcefully rebuild initrd!!!!... maybe this one will work
 QUALIFIED_KERNEL="$(dnf5 repoquery --installed --queryformat='%{evr}.%{arch}' "kernel")"
 /usr/bin/dracut --no-hostonly --kver "$QUALIFIED_KERNEL" --reproducible --zstd -v --add ostree --add fido2 --add dmsquash-live -f "/usr/lib/modules/$QUALIFIED_KERNEL/initramfs.img"
